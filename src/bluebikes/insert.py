@@ -175,3 +175,4 @@ def _create_db(connection):
     connection.execute(bluebikes.sql.table_drop)
     connection.execute(bluebikes.sql.table_create)
     connection.execute(bluebikes.sql.table_enable_spatialite)
+    connection.execute(bluebikes.sql.table_add_spatial_indexes)

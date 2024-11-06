@@ -23,12 +23,23 @@ CREATE TABLE bluebikes (
     postal_code TEXT
 );
 """
-# Create columns for storing start and end points as geographic points in https://epsg.io/4326
+# Create columns for storing start and end points as geographic points
+# in https://epsg.io/4326
 table_enable_spatialite = """
 SELECT
     AddGeometryColumn('bluebikes', 'start_point', 4326, 'POINT', 'XY'),
     AddGeometryColumn('bluebikes', 'end_point', 4326, 'POINT', 'XY');
 """
+
+# Create spatial indexes on the start and end point columns,
+# so they are faster to search and compare
+table_add_spatial_indexes = """
+SELECT
+    CreateSpatialIndex('bluebikes', 'start_point'),
+    CreateSpatialIndex('bluebikes', 'end_point');
+
+"""
+
 
 # all records up to and including 202004-bluebikes-tripdata.csv
 insert_stmt_v0 = """
@@ -118,5 +129,3 @@ INSERT INTO bluebikes (
 )
 VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
-
-

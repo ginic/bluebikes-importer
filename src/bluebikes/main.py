@@ -3,7 +3,6 @@ import os
 import sqlite3
 import shutil
 
-from bluebikes import sql
 from bluebikes import insert
 from bluebikes import download
 
