@@ -8,34 +8,36 @@ from datetime import datetime
 import bluebikes.sql
 
 # extracts YYYYMM from file names
-MONTH_YEAR_RE = r'(20[0-4]\d)(0[1-9]|1[0-2])'
+MONTH_YEAR_RE = r"(20[0-4]\d)(0[1-9]|1[0-2])"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 # bluebikes started including fractional time in 2024
 DATE_FORMAT_WITH_MS = "%Y-%m-%d %H:%M:%S.%f"
 
-DATABASE = 'bluebike.sqlite'
+DATABASE = "bluebike.sqlite"
 BULK_INSERT_SIZE = 1000
 DATABASE_LOCK_TIMEOUT = 900  # 15 minutes
 
 
 def evenly_distribute_csv_files_for_insert_by_total_size(num_workers, data_dir):
     # find all CSV files and their sizes
-    pattern = os.path.join(data_dir, '*tripdata.csv')
+    pattern = os.path.join(data_dir, "*tripdata.csv")
     files = [(file, os.path.getsize(file)) for file in glob.glob(pattern)]
 
     # sort files by size in descending order (optional but helps in distribution)
     files.sort(key=lambda x: x[1], reverse=True)
 
     # initialize distribution dictionary
-    distribution = {i: [] for i in range(num_workers)}  # Each worker has an empty list of files
-    workers = [{'id': i, 'total_size': 0} for i in range(num_workers)]
+    distribution = {
+        i: [] for i in range(num_workers)
+    }  # Each worker has an empty list of files
+    workers = [{"id": i, "total_size": 0} for i in range(num_workers)]
 
     # distribute files uniformly across workers
     for file, size in files:
         # Find the worker with the minimum total size
-        min_worker = min(workers, key=lambda x: x['total_size'])
-        distribution[min_worker['id']].append(file)  # Add only file path, not size
-        min_worker['total_size'] += size
+        min_worker = min(workers, key=lambda x: x["total_size"])
+        distribution[min_worker["id"]].append(file)  # Add only file path, not size
+        min_worker["total_size"] += size
 
     return distribution
 
@@ -55,8 +57,8 @@ def print_csv_header(file):
     """
     Helper function to print the first line of a CSV file. Useful for schema debugging
     """
-    with open(file, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    with open(file, newline="") as csvfile:
+        reader = csv.reader(csvfile, delimiter=",", quotechar="|")
         for row in reader:
             print((file, row))
             return
@@ -64,10 +66,10 @@ def print_csv_header(file):
 
 def _insert_rows_from_single_csv(file, cursor):
     year, month = re.findall(MONTH_YEAR_RE, file)[0]
-    month_year = int('%s%s' % (year, month))
+    month_year = int("%s%s" % (year, month))
 
-    with open(file, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+    with open(file, newline="") as csvfile:
+        reader = csv.reader(csvfile, delimiter=",", quotechar='"')
         insert_count = 0
         passed_header_row = False
         data_to_insert = []
@@ -83,7 +85,9 @@ def _insert_rows_from_single_csv(file, cursor):
 
             # newer records drop duration
             if 202304 <= month_year:
-                date_fmt = DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
+                date_fmt = (
+                    DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
+                )
                 end_date = datetime.strptime(row[4], date_fmt)
                 start_date = datetime.strptime(row[3], date_fmt)
                 time_delta = end_date - start_date
@@ -99,6 +103,7 @@ def _insert_rows_from_single_csv(file, cursor):
 
 
 def _bulk_insert_by_schema(data_to_insert, month_year, cursor):
+    # TODO Handle point creation here
     if month_year <= 202004:
         insert_stmt = bluebikes.sql.insert_stmt_v0
     elif 202005 <= month_year <= 202303:
@@ -115,7 +120,9 @@ def _bulk_insert_by_schema(data_to_insert, month_year, cursor):
 
 
 def _initialize_in_memory_database(worker_number):
-    memory_conn = sqlite3.connect(':memory:', timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None)
+    memory_conn = sqlite3.connect(
+        ":memory:", timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None
+    )
     _configure_sqlite_pragma(memory_conn, "memory")
     cursor = memory_conn.cursor()
     cursor.execute(bluebikes.sql.table_create)
@@ -127,7 +134,7 @@ def _initialize_in_memory_database(worker_number):
 def _configure_sqlite_pragma(connection, journal_mode="WAL"):
     connection.execute("PRAGMA synchronous = OFF")
     connection.execute("PRAGMA journal_mode = %s" % journal_mode)
-    connection.execute('PRAGMA busy_timeout = %s' % (DATABASE_LOCK_TIMEOUT * 1000))
+    connection.execute("PRAGMA busy_timeout = %s" % (DATABASE_LOCK_TIMEOUT * 1000))
 
 
 def _seed_auto_increment(cursor, worker_number):
@@ -145,9 +152,26 @@ def _dump_memory_db_to_file(memory_conn, database=DATABASE):
     """
     Insert data from the in-memory table to the file-based table
     """
-    file_conn = sqlite3.connect(database, timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None)
+    file_conn = sqlite3.connect(
+        database, timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None
+    )
     _configure_sqlite_pragma(file_conn)
     memory_conn.execute('ATTACH DATABASE "%s" AS filedb' % database)
-    memory_conn.execute('INSERT INTO filedb.bluebikes SELECT * FROM bluebikes')
-    memory_conn.execute('DETACH DATABASE filedb')
+    memory_conn.execute("INSERT INTO filedb.bluebikes SELECT * FROM bluebikes")
+    memory_conn.execute("DETACH DATABASE filedb")
     file_conn.close()
+
+
+def _create_db(connection):
+    """Creates the bluebikes table in the connection SQLite database
+    with the SpatiaLite extension enabled
+
+    Args:
+        connection: the database connection
+    """
+    connection.enable_load_extension(True)
+    connection.load_extension("mod_spatialite")
+    connection.execute("SELECT InitSpatialMetaData()")
+    connection.execute(bluebikes.sql.table_drop)
+    connection.execute(bluebikes.sql.table_create)
+    connection.execute(bluebikes.sql.table_enable_spatialite)

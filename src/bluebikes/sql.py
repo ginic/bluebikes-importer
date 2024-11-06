@@ -18,18 +18,24 @@ CREATE TABLE bluebikes (
     ride_id INTEGER NOT NULL,
     usertype TEXT NOT NULL,
     birth_year INTEGER,
-    gender TEXT,    
+    gender TEXT,
     rideable_type TEXT,
     postal_code TEXT
 );
 """
+# Create columns for storing start and end points as geographic points in https://epsg.io/4326
+table_enable_spatialite = """
+SELECT
+    AddGeometryColumn('bluebikes', 'start_point', 4326, 'POINT', 'XY'),
+    AddGeometryColumn('bluebikes', 'end_point', 4326, 'POINT', 'XY');
+"""
 
 # all records up to and including 202004-bluebikes-tripdata.csv
 insert_stmt_v0 = """
-INSERT INTO bluebikes (  
-    src_file,          
+INSERT INTO bluebikes (
+    src_file,
     tripduration,
-    started_at, 
+    started_at,
     ended_at,
     start_id,
     start_station_name,
@@ -49,10 +55,10 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 # all records between 202005-bluebikes-tripdata.csv - 202303-bluebikes-tripdata.csv
 insert_stmt_v1 = """
-INSERT INTO bluebikes (  
-    src_file,          
+INSERT INTO bluebikes (
+    src_file,
     tripduration,
-    started_at, 
+    started_at,
     ended_at,
     start_id,
     start_station_name,
@@ -71,33 +77,33 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 # all records between 202304-bluebikes-tripdata.csv - 202403-bluebikes-tripdata.csv
 insert_stmt_v2 = """
-INSERT INTO bluebikes (  
+INSERT INTO bluebikes (
     src_file,
-    ride_id,     
-    rideable_type,     
+    ride_id,
+    rideable_type,
     tripduration,
-    started_at, 
+    started_at,
     ended_at,
     start_station_name,
-    start_id,    
+    start_id,
     end_station_name,
-    end_id,    
+    end_id,
     start_lat,
-    start_lng,    
+    start_lng,
     end_lat,
-    end_lng,    
-    usertype    
+    end_lng,
+    usertype
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 # id insert
 id_insert = """
-INSERT INTO bluebikes (  
+INSERT INTO bluebikes (
     id,
-    src_file,          
+    src_file,
     tripduration,
-    started_at, 
+    started_at,
     ended_at,
     start_id,
     start_station_name,
@@ -112,3 +118,5 @@ INSERT INTO bluebikes (
 )
 VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
+
+
