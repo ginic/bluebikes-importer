@@ -11,7 +11,7 @@ There are 2 ways of running this application, developer mode and data science mo
 
 ### For Local Development
 #### Install SpatiaLite
-This projects uses [SpatiaLite](https://www.gaia-gis.it/fossil/libspatialite/index), the SQLite database extension for working with spatial and geographic data. SpatiaLite needs to be manually installed first. You can install it following the instructions for your operating system from https://docs.djangoproject.com/en/5.1/ref/contrib/gis/install/spatialite/.
+This projects uses [SpatiaLite](https://www.gaia-gis.it/fossil/libspatialite/index), the SQLite database extension for working with spatial and geographic data. SpatiaLite needs to be manually installed first. You can install it following the instructions for [Mac and Windows](https://docs.djangoproject.com/en/5.1/ref/contrib/gis/install/spatialite/) or [Linux](https://docs.datasette.io/en/stable/spatialite.html#installing-spatialite-on-linux).
 
 #### With poetry
 This project uses [poetry](https://python-poetry.org) for development and dependency management. Poetry can be installed with [`pipx install poetry`], or see [poetry](https://python-poetry.org/docs/) or [pipx](https://github.com/pypa/pipx) documentation for more information.
