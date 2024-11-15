@@ -100,7 +100,6 @@ def _insert_rows_from_single_csv(file, cursor):
                 # ensure we skip the header row
                 continue
 
-            row.insert(0, file)
             data_to_insert.append(row)
             insert_count += 1
 
@@ -109,8 +108,8 @@ def _insert_rows_from_single_csv(file, cursor):
                 date_fmt = (
                     DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
                 )
-                end_date = datetime.strptime(row[4], date_fmt)
-                start_date = datetime.strptime(row[3], date_fmt)
+                end_date = datetime.strptime(row[3], date_fmt)
+                start_date = datetime.strptime(row[2], date_fmt)
                 time_delta = end_date - start_date
                 row.insert(3, time_delta.total_seconds())
 
@@ -133,6 +132,8 @@ def _insert_rows_from_single_csv(file, cursor):
 
             # Add the formatted geometry points for the row
             row.extend([start_point, end_point])
+            # Add source file name as first column
+            row.insert(0, file)
 
             if insert_count == BULK_INSERT_SIZE:
                 _bulk_insert_by_schema(data_to_insert, month_year, cursor)
@@ -144,7 +145,6 @@ def _insert_rows_from_single_csv(file, cursor):
 
 
 def _bulk_insert_by_schema(data_to_insert, month_year, cursor):
-    # TODO Handle point creation here
     if month_year <= 202004:
         insert_stmt = bluebikes.sql.insert_stmt_v0
     elif 202005 <= month_year <= 202303:
@@ -157,7 +157,6 @@ def _bulk_insert_by_schema(data_to_insert, month_year, cursor):
         cursor.executemany(insert_stmt, data_to_insert)
     except Exception as e:
         print(e)
-        # print(data_to_insert)
 
 
 def _initialize_in_memory_database(worker_number):
@@ -165,8 +164,8 @@ def _initialize_in_memory_database(worker_number):
         ":memory:", timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None
     )
     _configure_sqlite_pragma(memory_conn, "memory")
+    _create_db(memory_conn)
     cursor = memory_conn.cursor()
-    cursor.execute(bluebikes.sql.table_create)
     _seed_auto_increment(cursor, worker_number)
 
     return memory_conn, cursor
@@ -204,11 +203,8 @@ def _dump_memory_db_to_file(memory_conn, database=DATABASE):
 
 
 def _create_db(connection):
-    """Creates the bluebikes table in the connection SQLite database
-    with the SpatiaLite extension enabled
-
-    Args:
-        connection: the database connection
+    """Creates the bluebikes table in the connection to the SQLite database
+    with the SpatiaLite extension enabled.
     """
     connection.enable_load_extension(True)
     connection.load_extension("mod_spatialite")

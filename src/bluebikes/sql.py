@@ -37,7 +37,6 @@ table_add_spatial_indexes = """
 SELECT
     CreateSpatialIndex('bluebikes', 'start_point'),
     CreateSpatialIndex('bluebikes', 'end_point');
-
 """
 
 
@@ -63,7 +62,7 @@ INSERT INTO bluebikes (
     start_point,
     end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326), GeomFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), ST_PointFromText(?, 4326));
 """
 
 # all records between 202005-bluebikes-tripdata.csv - 202303-bluebikes-tripdata.csv
@@ -87,7 +86,7 @@ INSERT INTO bluebikes (
     start_point,
     end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326), GeomFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), ST_PointFromText(?, 4326));
 """
 
 # all records between 202304-bluebikes-tripdata.csv - 202403-bluebikes-tripdata.csv
@@ -111,7 +110,7 @@ INSERT INTO bluebikes (
     start_point,
     end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326), GeomFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), ST_PointFromText(?, 4326));
 """
 
 # id insert
@@ -131,9 +130,7 @@ INSERT INTO bluebikes (
     end_lat,
     end_lng,
     ride_id,
-    usertype,
-    start_point,
-    end_point
+    usertype
 )
-VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
