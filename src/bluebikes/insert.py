@@ -17,6 +17,27 @@ DATABASE = "bluebike.sqlite"
 BULK_INSERT_SIZE = 1000
 DATABASE_LOCK_TIMEOUT = 900  # 15 minutes
 
+# Index for column where start and end lat and long points appear in CSVs
+# These indexes are used through 202303 (March 2023)
+START_LATITUDE_IDX_THRU_202303 = 5
+START_LONGITUDE_IDX_THRU_202303 = 6
+END_LATITUDE_IDX_THRU_202303 = 9
+END_LONGITUDE_IDX_THRU_202303 = 10
+
+
+# These indexes are used starting in 202304 (April 2023)
+START_LATITUDE_IDX = 8
+START_LONGITUDE_IDX = 9
+END_LATITUDE_IDX = 10
+END_LONGITUDE_IDX = 11
+
+
+def get_well_known_text_point(longitude, latitude):
+    """Returns the Well Known Text format for a Point to
+    insert into the SpatiaLite database
+    """
+    return f"POINT({longitude} {latitude})"
+
 
 def evenly_distribute_csv_files_for_insert_by_total_size(num_workers, data_dir):
     # find all CSV files and their sizes
@@ -92,6 +113,26 @@ def _insert_rows_from_single_csv(file, cursor):
                 start_date = datetime.strptime(row[3], date_fmt)
                 time_delta = end_date - start_date
                 row.insert(3, time_delta.total_seconds())
+
+                # Format geometry points appropriately for the month
+                start_point = get_well_known_text_point(
+                    row[START_LONGITUDE_IDX], row[START_LATITUDE_IDX]
+                )
+                end_point = get_well_known_text_point(
+                    row[END_LONGITUDE_IDX], row[END_LATITUDE_IDX]
+                )
+            else:
+                start_point = get_well_known_text_point(
+                    row[START_LONGITUDE_IDX_THRU_202303],
+                    row[START_LATITUDE_IDX_THRU_202303],
+                )
+                end_point = get_well_known_text_point(
+                    row[END_LONGITUDE_IDX_THRU_202303],
+                    row[END_LATITUDE_IDX_THRU_202303],
+                )
+
+            # Add the formatted geometry points for the row
+            row.extend([start_point, end_point])
 
             if insert_count == BULK_INSERT_SIZE:
                 _bulk_insert_by_schema(data_to_insert, month_year, cursor)

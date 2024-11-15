@@ -59,9 +59,11 @@ INSERT INTO bluebikes (
     ride_id,
     usertype,
     birth_year,
-    gender
+    gender,
+    start_point,
+    end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326), GeomFromText(?, 4326));
 """
 
 # all records between 202005-bluebikes-tripdata.csv - 202303-bluebikes-tripdata.csv
@@ -81,9 +83,11 @@ INSERT INTO bluebikes (
     end_lng,
     ride_id,
     usertype,
-    postal_code
+    postal_code,
+    start_point,
+    end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326), GeomFromText(?, 4326));
 """
 
 # all records between 202304-bluebikes-tripdata.csv - 202403-bluebikes-tripdata.csv
@@ -103,9 +107,11 @@ INSERT INTO bluebikes (
     start_lng,
     end_lat,
     end_lng,
-    usertype
+    usertype,
+    start_point,
+    end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326), GeomFromText(?, 4326));
 """
 
 # id insert
@@ -125,7 +131,9 @@ INSERT INTO bluebikes (
     end_lat,
     end_lng,
     ride_id,
-    usertype
+    usertype,
+    start_point,
+    end_point
 )
-VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
