@@ -24,7 +24,6 @@ START_LONGITUDE_IDX_THRU_202303 = 6
 END_LATITUDE_IDX_THRU_202303 = 9
 END_LONGITUDE_IDX_THRU_202303 = 10
 
-
 # These indexes are used starting in 202304 (April 2023)
 START_LATITUDE_IDX = 8
 START_LONGITUDE_IDX = 9
@@ -105,6 +104,13 @@ def _insert_rows_from_single_csv(file, cursor):
 
             # newer records drop duration
             if 202304 <= month_year:
+                # Format geometry points appropriately for the month
+                start_point = get_well_known_text_point(
+                    row[START_LONGITUDE_IDX], row[START_LATITUDE_IDX]
+                )
+                end_point = get_well_known_text_point(
+                    row[END_LONGITUDE_IDX], row[END_LATITUDE_IDX]
+                )
                 date_fmt = (
                     DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
                 )
@@ -113,13 +119,6 @@ def _insert_rows_from_single_csv(file, cursor):
                 time_delta = end_date - start_date
                 row.insert(3, time_delta.total_seconds())
 
-                # Format geometry points appropriately for the month
-                start_point = get_well_known_text_point(
-                    row[START_LONGITUDE_IDX], row[START_LATITUDE_IDX]
-                )
-                end_point = get_well_known_text_point(
-                    row[END_LONGITUDE_IDX], row[END_LATITUDE_IDX]
-                )
             else:
                 start_point = get_well_known_text_point(
                     row[START_LONGITUDE_IDX_THRU_202303],

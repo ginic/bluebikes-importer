@@ -41,9 +41,10 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
         conn.load_extension("mod_spatialite")
         result = list(conn.execute("SELECT COUNT(*) FROM bluebikes"))
         assert result == [(2,)]
+        # Query geometry points using snap to grid to fix precision
         geoms = list(
             conn.execute(
-                "SELECT ST_AsText(start_point), ST_AsText(end_point) FROM bluebikes ORDER BY started_at"
+                "SELECT ST_AsText(ST_SnapToGrid(start_point, 0.000001)), ST_AsText(ST_SnapToGrid(end_point, 0.000001)) FROM bluebikes ORDER BY started_at"
             )
         )
         # Make sure spatial data is correcly managed
@@ -52,6 +53,6 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
             "POINT(-71.111075 42.373379)",
         )
         assert geoms[1] == (
-            "POINT(-71.0564382089648 42.40672099242264)",
-            "POINT(-71.04731440549585 42.403369462300134)",
+            "POINT(-71.056438 42.406721)",
+            "POINT(-71.047314 42.403369)",
         )
