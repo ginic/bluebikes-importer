@@ -12,7 +12,7 @@ import bluebikes.sql
 def empty_test_db(tmp_path):
     db_path = tmp_path / "test.db"
     with sqlite3.connect(db_path) as conn:
-        bluebikes.insert._create_db(conn)
+        bluebikes.insert._create_bluebikes_trips_db(conn)
 
     return db_path
 
@@ -37,8 +37,7 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
     bluebikes.insert.insert_rows_from_list_of_csvs(worker_assignments, empty_test_db)
 
     with sqlite3.connect(empty_test_db) as conn:
-        conn.enable_load_extension(True)
-        conn.load_extension("mod_spatialite")
+        bluebikes.sql._initialize_spatialite(conn)
         result = list(conn.execute("SELECT COUNT(*) FROM bluebikes"))
         assert result == [(2,)]
         # Query geometry points using snap to grid to fix precision

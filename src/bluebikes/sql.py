@@ -1,6 +1,6 @@
-table_drop = "DROP TABLE IF EXISTS bluebikes; "
+bluebikes_table_drop = "DROP TABLE IF EXISTS bluebikes;"
 
-table_create = """
+bluebikes_create = """
 CREATE TABLE bluebikes (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     src_file TEXT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE bluebikes (
 """
 # Create columns for storing start and end points as geographic points
 # in https://epsg.io/4326
-table_enable_spatialite = """
+bluebikes_enable_spatialite = """
 SELECT
     AddGeometryColumn('bluebikes', 'start_point', 4326, 'POINT', 'XY'),
     AddGeometryColumn('bluebikes', 'end_point', 4326, 'POINT', 'XY');
@@ -33,7 +33,7 @@ SELECT
 
 # Create spatial indexes on the start and end point columns,
 # so they are faster to search and compare
-table_add_spatial_indexes = """
+bluebikes_add_spatial_indexes = """
 SELECT
     CreateSpatialIndex('bluebikes', 'start_point'),
     CreateSpatialIndex('bluebikes', 'end_point');
@@ -41,7 +41,7 @@ SELECT
 
 
 # all records up to and including 202004-bluebikes-tripdata.csv
-insert_stmt_v0 = """
+bluebikes_insert_stmt_v0 = """
 INSERT INTO bluebikes (
     src_file,
     tripduration,
@@ -66,7 +66,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326
 """
 
 # all records between 202005-bluebikes-tripdata.csv - 202303-bluebikes-tripdata.csv
-insert_stmt_v1 = """
+bluebikes_insert_stmt_v1 = """
 INSERT INTO bluebikes (
     src_file,
     tripduration,
@@ -90,7 +90,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), 
 """
 
 # all records between 202304-bluebikes-tripdata.csv - 202403-bluebikes-tripdata.csv
-insert_stmt_v2 = """
+bluebikes_insert_stmt_v2 = """
 INSERT INTO bluebikes (
     src_file,
     ride_id,
@@ -114,7 +114,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), 
 """
 
 # id insert
-id_insert = """
+bluebikes_id_insert = """
 INSERT INTO bluebikes (
     id,
     src_file,
@@ -134,3 +134,33 @@ INSERT INTO bluebikes (
 )
 VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
+
+stations_table_drop = "DROP TABLE IF EXISTS stations;"
+
+stations_create = """
+CREATE TABLE stations (
+    id TEXT PRIMARY KEY NOT NULL,
+    src_file TEXT NOT NULL,
+    name TEXt NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    municipality TEXT NOT NULL,
+    public BOOLEAN,
+    number_of_docks INTEGER NOT NULL
+);
+"""
+
+stations_enable_spatialite = """
+SELECT
+    AddGeometryColumn('stations', 'geom_point', 4326, 'POINT', 'XY');
+"""
+
+stations_add_spatial_index = """
+SELECT CreateSpatialIndex('stations', 'geom_point');
+"""
+
+
+def _initialize_spatialite(connection):
+    """Enables SpatiaLite in the connected database."""
+    connection.enable_load_extension(True)
+    connection.load_extension("mod_spatialite")

@@ -145,11 +145,11 @@ def _insert_rows_from_single_csv(file, cursor):
 
 def _bulk_insert_by_schema(data_to_insert, month_year, cursor):
     if month_year <= 202004:
-        insert_stmt = bluebikes.sql.insert_stmt_v0
+        insert_stmt = bluebikes.sql.bluebikes_insert_stmt_v0
     elif 202005 <= month_year <= 202303:
-        insert_stmt = bluebikes.sql.insert_stmt_v1
+        insert_stmt = bluebikes.sql.bluebikes_insert_stmt_v1
     elif 202304 <= month_year:
-        insert_stmt = bluebikes.sql.insert_stmt_v2
+        insert_stmt = bluebikes.sql.bluebikes_insert_stmt_v2
     else:
         return
     try:
@@ -163,10 +163,10 @@ def _initialize_in_memory_database(worker_number):
         ":memory:", timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None
     )
     _configure_sqlite_pragma(memory_conn, "memory")
-    _create_db(memory_conn)
+    bluebikes.sql._initialize_spatialite(memory_conn)
+    _create_bluebikes_trips_db(memory_conn)
     cursor = memory_conn.cursor()
     _seed_auto_increment(cursor, worker_number)
-
     return memory_conn, cursor
 
 
@@ -183,7 +183,7 @@ def _seed_auto_increment(cursor, worker_number):
     It will be deleted immediately.
     """
     auto_increment_start_id = worker_number * 100000000
-    cursor.execute(bluebikes.sql.id_insert, [auto_increment_start_id])
+    cursor.execute(bluebikes.sql.bluebikes_id_insert, [auto_increment_start_id])
     cursor.execute("delete from bluebikes where rowid=?", [auto_increment_start_id])
 
 
@@ -201,14 +201,19 @@ def _dump_memory_db_to_file(memory_conn, database=DATABASE):
     file_conn.close()
 
 
-def _create_db(connection):
-    """Creates the bluebikes table in the connection to the SQLite database
-    with the SpatiaLite extension enabled.
+def _create_bluebikes_trips_db(connection):
     """
-    connection.enable_load_extension(True)
-    connection.load_extension("mod_spatialite")
+    Configures SpatiaLite and creates the
+    bluebikes table in the connection to the SQLite database.
+    """
+    bluebikes.sql._initialize_spatialite(connection)
+    _create_bluebikes_tables(connection)
+
+
+def _create_bluebikes_tables(connection):
+    """The SpatiaLite extension should already be enabled in the connection."""
     connection.execute("SELECT InitSpatialMetaData()")
-    connection.execute(bluebikes.sql.table_drop)
-    connection.execute(bluebikes.sql.table_create)
-    connection.execute(bluebikes.sql.table_enable_spatialite)
-    connection.execute(bluebikes.sql.table_add_spatial_indexes)
+    connection.execute(bluebikes.sql.bluebikes_table_drop)
+    connection.execute(bluebikes.sql.bluebikes_create)
+    connection.execute(bluebikes.sql.bluebikes_enable_spatialite)
+    connection.execute(bluebikes.sql.bluebikes_add_spatial_indexes)
