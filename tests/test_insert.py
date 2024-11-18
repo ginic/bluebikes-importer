@@ -12,13 +12,22 @@ import bluebikes.sql
 def empty_test_db(tmp_path):
     db_path = tmp_path / "test.db"
     with sqlite3.connect(db_path) as conn:
-        bluebikes.insert._create_bluebikes_trips_db(conn)
+        bluebikes.insert._initialize_bluebikes_spatialite_database(conn)
 
     return db_path
 
 
 def test_create_db(empty_test_db):
+    # Check both the database file and tables were created
     assert empty_test_db.exists()
+    with sqlite3.connect(empty_test_db) as conn:
+        tables = list(
+            conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND (name='bluebikes' OR name='stations') ORDER BY name;"
+            )
+        )
+        assert tables[0] == ("bluebikes",)
+        assert tables[1] == ("stations",)
 
 
 def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
@@ -34,10 +43,10 @@ def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
 
 def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
     worker_assignments = (1, glob.glob(os.path.join(csv_dir, "*.csv")))
-    bluebikes.insert.insert_rows_from_list_of_csvs(worker_assignments, empty_test_db)
+    bluebikes.insert.insert_trips_from_list_of_csvs(worker_assignments, empty_test_db)
 
     with sqlite3.connect(empty_test_db) as conn:
-        bluebikes.sql._initialize_spatialite(conn)
+        bluebikes.sql._enable_spatialite(conn)
         result = list(conn.execute("SELECT COUNT(*) FROM bluebikes"))
         assert result == [(2,)]
         # Query geometry points using snap to grid to fix precision

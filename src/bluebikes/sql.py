@@ -161,6 +161,18 @@ SELECT CreateSpatialIndex('stations', 'geom_point');
 
 
 def _initialize_spatialite(connection):
-    """Enables SpatiaLite in the connected database."""
+    """
+    Initialize SpatiaLite and spatial metadata for the database.
+    Only needs to be run once when the database is first created.
+    """
+    _enable_spatialite(connection)
+    connection.execute("SELECT InitSpatialMetaData()")
+
+
+def _enable_spatialite(connection):
+    """
+    Enables SpatiaLite in the connected database. Needs to be run any time
+    you want to use SpatiaLite.
+    """
     connection.enable_load_extension(True)
     connection.load_extension("mod_spatialite")

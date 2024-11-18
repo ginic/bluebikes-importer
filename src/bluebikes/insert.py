@@ -62,12 +62,12 @@ def evenly_distribute_csv_files_for_insert_by_total_size(num_workers, data_dir):
     return distribution
 
 
-def insert_rows_from_list_of_csvs(worker_assignments, database=DATABASE):
+def insert_trips_from_list_of_csvs(worker_assignments, database=DATABASE):
     worker_number, files = worker_assignments
     memory_conn, cursor = _initialize_in_memory_database(worker_number)
 
     for f in files:
-        _insert_rows_from_single_csv(f, cursor)
+        _insert_trips_from_single_csv(f, cursor)
 
     _dump_memory_db_to_file(memory_conn, database)
     memory_conn.close()
@@ -84,7 +84,7 @@ def print_csv_header(file):
             return
 
 
-def _insert_rows_from_single_csv(file, cursor):
+def _insert_trips_from_single_csv(file, cursor):
     year, month = re.findall(MONTH_YEAR_RE, file)[0]
     month_year = int("%s%s" % (year, month))
 
@@ -135,15 +135,15 @@ def _insert_rows_from_single_csv(file, cursor):
             row.insert(0, file)
 
             if insert_count == BULK_INSERT_SIZE:
-                _bulk_insert_by_schema(data_to_insert, month_year, cursor)
+                _bulk_insert_trips_by_schema(data_to_insert, month_year, cursor)
                 insert_count = 0
                 data_to_insert = []
 
     # insert any outstanding records from the last batch
-    _bulk_insert_by_schema(data_to_insert, month_year, cursor)
+    _bulk_insert_trips_by_schema(data_to_insert, month_year, cursor)
 
 
-def _bulk_insert_by_schema(data_to_insert, month_year, cursor):
+def _bulk_insert_trips_by_schema(data_to_insert, month_year, cursor):
     if month_year <= 202004:
         insert_stmt = bluebikes.sql.bluebikes_insert_stmt_v0
     elif 202005 <= month_year <= 202303:
@@ -164,7 +164,7 @@ def _initialize_in_memory_database(worker_number):
     )
     _configure_sqlite_pragma(memory_conn, "memory")
     bluebikes.sql._initialize_spatialite(memory_conn)
-    _create_bluebikes_trips_db(memory_conn)
+    _create_bluebikes_table(memory_conn)
     cursor = memory_conn.cursor()
     _seed_auto_increment(cursor, worker_number)
     return memory_conn, cursor
@@ -201,19 +201,54 @@ def _dump_memory_db_to_file(memory_conn, database=DATABASE):
     file_conn.close()
 
 
-def _create_bluebikes_trips_db(connection):
+def _create_spatial_table(
+    connection,
+    drop_existing_table,
+    create_new_table,
+    enable_spatial_columns,
+    add_spatial_index,
+):
     """
-    Configures SpatiaLite and creates the
-    bluebikes table in the connection to the SQLite database.
+    Convenience method for creating tables with spatial data columns.
+    """
+    connection.execute(drop_existing_table)
+    connection.execute(create_new_table)
+    connection.execute(enable_spatial_columns)
+    connection.execute(add_spatial_index)
+
+
+def _create_bluebikes_table(connection):
+    """
+    Create the 'bluebikes' trip table, overwriting any existing table with the same name.
+    The SpatiaLite extension should already be enabled in the connection.
+    """
+    _create_spatial_table(
+        connection,
+        bluebikes.sql.bluebikes_table_drop,
+        bluebikes.sql.bluebikes_create,
+        bluebikes.sql.bluebikes_enable_spatialite,
+        bluebikes.sql.bluebikes_add_spatial_indexes,
+    )
+
+
+def _create_stations_table(connection):
+    """
+    Create the 'stations' table, overwriting any existing table with the same name.
+    The SpatiaLite extension should already be enabled in the connection.
+    """
+    _create_spatial_table(
+        connection,
+        bluebikes.sql.stations_table_drop,
+        bluebikes.sql.stations_create,
+        bluebikes.sql.stations_enable_spatialite,
+        bluebikes.sql.stations_add_spatial_index,
+    )
+
+
+def _initialize_bluebikes_spatialite_database(connection):
+    """Fully re-creates the entire database with SpatiaLite enabled,
+    overwriting any existing 'bluebikes' trip or 'stations' tables
     """
     bluebikes.sql._initialize_spatialite(connection)
-    _create_bluebikes_tables(connection)
-
-
-def _create_bluebikes_tables(connection):
-    """The SpatiaLite extension should already be enabled in the connection."""
-    connection.execute("SELECT InitSpatialMetaData()")
-    connection.execute(bluebikes.sql.bluebikes_table_drop)
-    connection.execute(bluebikes.sql.bluebikes_create)
-    connection.execute(bluebikes.sql.bluebikes_enable_spatialite)
-    connection.execute(bluebikes.sql.bluebikes_add_spatial_indexes)
+    _create_bluebikes_table(connection)
+    _create_stations_table(connection)

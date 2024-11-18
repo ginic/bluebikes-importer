@@ -53,17 +53,18 @@ def main(data_dir, is_cleanup_downloads=True, download_only=False, insert_only=F
         print("Running in download_only mode. Skipping insert of files")
         return
 
-    print("==== Recreating database ====")
-    # drop and recreate the table in the db file before inserting the records
     with sqlite3.connect(insert.DATABASE, isolation_level=None) as db:
-        insert._create_db(db)
+        print("==== Initializing SpatiaLite database ====")
+        insert._initialize_bluebikes_spatialite_database(db)
 
-    print("==== Inserting with %s workers ====" % worker_count)
+    print("=== Normalizing and inserting station data ====")
+
+    print("==== Inserting bluebikes trips with %s workers ====" % worker_count)
     distribution = insert.evenly_distribute_csv_files_for_insert_by_total_size(
         worker_count, data_dir
     )
     process_map(
-        insert.insert_rows_from_list_of_csvs,
+        insert.insert_trips_from_list_of_csvs,
         distribution.items(),
         [insert.DATABASE] * len(distribution),
         max_workers=worker_count,
