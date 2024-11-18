@@ -58,6 +58,7 @@ def main(data_dir, is_cleanup_downloads=True, download_only=False, insert_only=F
         insert._initialize_bluebikes_spatialite_database(db)
 
     print("=== Normalizing and inserting station data ====")
+    insert._insert_stations(data_dir)
 
     print("==== Inserting bluebikes trips with %s workers ====" % worker_count)
     distribution = insert.evenly_distribute_csv_files_for_insert_by_total_size(

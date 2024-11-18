@@ -64,3 +64,12 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
             "POINT(-71.056438 42.406721)",
             "POINT(-71.047314 42.403369)",
         )
+
+
+def test_insert_stations(empty_test_db, published_stations_dir):
+    bluebikes.insert._insert_stations(published_stations_dir, empty_test_db)
+
+    with sqlite3.connect(empty_test_db) as conn:
+        bluebikes.sql._enable_spatialite(conn)
+        stations = list(conn.execute("SELECT * FROM stations;"))
+        assert len(stations) == 5

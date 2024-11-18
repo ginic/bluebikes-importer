@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime
 
 import bluebikes.sql
+import bluebikes.stations.published.process as bbstations
 
 # extracts YYYYMM from file names
 MONTH_YEAR_RE = r"(20[0-4]\d)(0[1-9]|1[0-2])"
@@ -82,6 +83,22 @@ def print_csv_header(file):
         for row in reader:
             print((file, row))
             return
+
+
+def _insert_stations(station_file_directory, database=DATABASE):
+    """
+    Finds and normalizes CSVs containing station data in station_file_directory and inserts them into the stations table in the database.
+    """
+    # The number of stations is <2000, so inserting in
+    # one go should be fine
+    stations_df = bbstations.process_to_dataframe(station_file_directory)
+    stations_df["geom_point"] = stations_df.apply(
+        lambda x: get_well_known_text_point(x["Longitude"], x["Latitude"]), axis=1
+    )
+
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.executemany(bluebikes.sql.stations_insert, stations_df.values.tolist())
 
 
 def _insert_trips_from_single_csv(file, cursor):

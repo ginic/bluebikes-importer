@@ -159,6 +159,22 @@ stations_add_spatial_index = """
 SELECT CreateSpatialIndex('stations', 'geom_point');
 """
 
+stations_insert = """
+INSERT INTO stations (
+    id,
+    src_file,
+    name,
+    latitude,
+    longitude,
+    municipality,
+    public,
+    number_of_docks,
+    geom_point
+
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326));
+"""
+
 
 def _initialize_spatialite(connection):
     """
