@@ -75,7 +75,10 @@ def fill_with_mode(series):
 
 
 def process_to_dataframe(
-    station_file_directory, write_to_disk=None, simple_output=False
+    station_file_directory,
+    write_to_disk=None,
+    simple_output=False,
+    drop_duplicates_across_files=True,
 ):
     # Initialize an empty list to store dataframes
     dataframes = []
@@ -115,6 +118,10 @@ def process_to_dataframe(
         combined_df.drop("Public", axis=1, inplace=True)
         combined_df.drop("# of Docks", axis=1, inplace=True)
         combined_df.drop("File", axis=1, inplace=True)
+
+    if drop_duplicates_across_files:
+        columns_less_file = (set(combined_df.columns)) - set(["File"])
+        combined_df.drop_duplicates(subset=columns_less_file, inplace=True)
 
     if write_to_disk is not None:
         output_file = write_to_disk

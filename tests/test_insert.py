@@ -72,4 +72,4 @@ def test_insert_stations(empty_test_db, published_stations_dir):
     with sqlite3.connect(empty_test_db) as conn:
         bluebikes.sql._enable_spatialite(conn)
         stations = list(conn.execute("SELECT * FROM stations;"))
-        assert len(stations) == 5
+        assert len(stations) == 3

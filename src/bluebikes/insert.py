@@ -97,6 +97,7 @@ def _insert_stations(station_file_directory, database=DATABASE):
     )
 
     with sqlite3.connect(database) as conn:
+        bluebikes.sql._enable_spatialite(conn)
         cursor = conn.cursor()
         cursor.executemany(bluebikes.sql.stations_insert, stations_df.values.tolist())
 
