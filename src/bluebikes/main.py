@@ -53,9 +53,11 @@ def main(data_dir, is_cleanup_downloads=True, download_only=False, insert_only=F
         print("Running in download_only mode. Skipping insert of files")
         return
 
+    # If the database already exists, you won't need to reinitialize SpatiaLite tables
+    is_new_database = not os.path.exists(insert.DATABASE)
     with sqlite3.connect(insert.DATABASE, isolation_level=None) as db:
         print("==== Initializing SpatiaLite database ====")
-        insert._initialize_bluebikes_spatialite_database(db)
+        insert._initialize_bluebikes_spatialite_database(db, is_new_database)
 
     print("=== Normalizing and inserting station data ====")
     insert._insert_stations(data_dir)

@@ -263,10 +263,10 @@ def _create_stations_table(connection):
     )
 
 
-def _initialize_bluebikes_spatialite_database(connection):
+def _initialize_bluebikes_spatialite_database(connection, is_new_database=True):
     """Fully re-creates the entire database with SpatiaLite enabled,
     overwriting any existing 'bluebikes' trip or 'stations' tables
     """
-    bluebikes.sql._initialize_spatialite(connection)
+    bluebikes.sql._initialize_spatialite(connection, is_new_database)
     _create_bluebikes_table(connection)
     _create_stations_table(connection)

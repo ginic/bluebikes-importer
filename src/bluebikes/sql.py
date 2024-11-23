@@ -1,4 +1,5 @@
-bluebikes_table_drop = "DROP TABLE IF EXISTS bluebikes;"
+# Drop the bluebikes table from the main database, don't return an error if it doesn't exist
+bluebikes_table_drop = "SELECT DropTable(NULL, 'bluebikes', True);"
 
 bluebikes_create = """
 CREATE TABLE bluebikes (
@@ -135,15 +136,16 @@ INSERT INTO bluebikes (
 VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
 
-stations_table_drop = "DROP TABLE IF EXISTS stations;"
+stations_table_drop = "SELECT DropTable(NULL, 'stations', True);"
 
 stations_create = """
 CREATE TABLE stations (
-    id TEXT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    raw_id TEXT NOT NULL,
     src_file TEXT NOT NULL,
-    name TEXt NOT NULL,
-    latitude REAL NOT NULL,
-    longitude REAL NOT NULL,
+    name TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
     municipality TEXT NOT NULL,
     public BOOLEAN,
     number_of_docks INTEGER NOT NULL
@@ -176,13 +178,14 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326));
 """
 
 
-def _initialize_spatialite(connection):
+def _initialize_spatialite(connection, is_new_database=True):
     """
     Initialize SpatiaLite and spatial metadata for the database.
     Only needs to be run once when the database is first created.
     """
     _enable_spatialite(connection)
-    connection.execute("SELECT InitSpatialMetaData()")
+    if is_new_database:
+        connection.execute("SELECT InitSpatialMetaData();")
 
 
 def _enable_spatialite(connection):
