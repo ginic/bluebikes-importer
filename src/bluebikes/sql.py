@@ -142,13 +142,14 @@ stations_create = """
 CREATE TABLE stations (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     raw_id TEXT NOT NULL,
-    src_file TEXT NOT NULL,
     name TEXT NOT NULL,
     latitude REAL,
     longitude REAL,
     municipality TEXT NOT NULL,
     public BOOLEAN,
-    number_of_docks INTEGER NOT NULL
+    number_of_docks INTEGER NOT NULL,
+    src_file TEXT NOT NULL,
+    UNIQUE(raw_id, src_file)
 );
 """
 
@@ -163,14 +164,14 @@ SELECT CreateSpatialIndex('stations', 'geom_point');
 
 stations_insert = """
 INSERT INTO stations (
-    id,
-    src_file,
+    raw_id,
     name,
     latitude,
     longitude,
     municipality,
     public,
     number_of_docks,
+    src_file,
     geom_point
 
 )

@@ -78,15 +78,17 @@ STATION_SRC_PRIORITIES = [
 ]
 
 # These are the columns and their data types will appear in the final dataframe
+# Note that technically str will be stored as an object dtype by pandas, but if you
+# use the "string" example from the pandas docs, SQLite throws an error later
 STATION_DTYPES = {
     "Latitude": float,
     "Longitude": float,
     "Public": bool,
     "# of Docks": int,
-    "Station ID": "string",
-    "File": "string",
-    "Municipality": "string",
-    "Name": "string",
+    "Station ID": str,
+    "File": str,
+    "Municipality": str,
+    "Name": str,
 }
 
 
