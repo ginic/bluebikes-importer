@@ -4,9 +4,14 @@ import pandas as pd
 
 DEFAULT_OUTPUT_FILE = "data/processed/all_published_stations.csv"
 
+STATIONS_CURRENT_CSV = "current_bluebikes_stations.csv"
+STATIONS_2011_2016_CSV = "Hubway_Stations_2011_2016.csv"
+STATIONS_HUBWAY_JULY_2017_CSV = "Hubway_Stations_as_of_July_2017.csv"
+STATIONS_PREV_HUBWAY_JULY_2017_CSV = "previous_Hubway_Stations_as_of_July_2017.csv"
+
 # Define the schema and names of the files to process
 STATION_FILES = {
-    "current_bluebikes_stations.csv": {
+    STATIONS_CURRENT_CSV: {
         "usecols": [
             "Number",
             "Name",
@@ -22,7 +27,7 @@ STATION_FILES = {
             "Total docks": "# of Docks",
         },
     },
-    "Hubway_Stations_2011_2016.csv": {
+    STATIONS_2011_2016_CSV: {
         "usecols": [
             "Station ID",
             "Station",
@@ -34,7 +39,7 @@ STATION_FILES = {
         "rename": {"Station": "Name"},
         "default_public": None,
     },
-    "Hubway_Stations_as_of_July_2017.csv": {
+    STATIONS_HUBWAY_JULY_2017_CSV: {
         "usecols": [
             "Number",
             "Name",
@@ -50,7 +55,7 @@ STATION_FILES = {
             "Total docks": "# of Docks",
         },
     },
-    "previous_Hubway_Stations_as_of_July_2017.csv": {
+    STATIONS_PREV_HUBWAY_JULY_2017_CSV: {
         "usecols": [
             "Station ID",
             "Station",
@@ -62,6 +67,26 @@ STATION_FILES = {
         ],
         "rename": {"Station": "Name", "publiclyExposed": "Public"},
     },
+}
+
+# If there are duplicate ids in the stations, I want them kept in this order of importance
+STATION_SRC_PRIORITIES = [
+    STATIONS_CURRENT_CSV,
+    STATIONS_HUBWAY_JULY_2017_CSV,
+    STATIONS_PREV_HUBWAY_JULY_2017_CSV,
+    STATIONS_2011_2016_CSV,
+]
+
+# These are the columns and their data types will appear in the final dataframe
+STATION_DTYPES = {
+    "Latitude": float,
+    "Longitude": float,
+    "Public": bool,
+    "# of Docks": int,
+    "Station ID": "string",
+    "File": "string",
+    "Municipality": "string",
+    "Name": "string",
 }
 
 
@@ -98,7 +123,8 @@ def process_to_dataframe(
                 {"Yes": True, "No": False, 1: True, 0: False}
             )
 
-        # default to None for files that don't specify a public value
+        # Default to None for files that don't specify a public value
+        # These will be filled with the most common value later
         if "default_public" in params:
             df["Public"] = params["default_public"]
 
@@ -113,15 +139,22 @@ def process_to_dataframe(
         fill_with_mode
     )
 
+    combined_df = combined_df.astype(STATION_DTYPES)
+
+    if drop_duplicates_across_files:
+        sorting_map = {f: idx for idx, f in enumerate(STATION_SRC_PRIORITIES)}
+
+        combined_df = combined_df.sort_values(
+            by="File", key=lambda x: x.map(sorting_map)
+        )
+        columns_less_file = (set(combined_df.columns)) - set(["File"])
+        combined_df.drop_duplicates(subset=columns_less_file, inplace=True)
+
     if simple_output:
         combined_df.drop("Municipality", axis=1, inplace=True)
         combined_df.drop("Public", axis=1, inplace=True)
         combined_df.drop("# of Docks", axis=1, inplace=True)
         combined_df.drop("File", axis=1, inplace=True)
-
-    if drop_duplicates_across_files:
-        columns_less_file = (set(combined_df.columns)) - set(["File"])
-        combined_df.drop_duplicates(subset=columns_less_file, inplace=True)
 
     if write_to_disk is not None:
         output_file = write_to_disk
