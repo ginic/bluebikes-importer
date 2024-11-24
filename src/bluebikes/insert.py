@@ -87,7 +87,8 @@ def print_csv_header(file):
 
 def _insert_stations(station_file_directory, database=DATABASE):
     """
-    Finds and normalizes CSVs containing station data in station_file_directory and inserts them into the stations table in the database.
+    Finds and normalizes CSVs containing station data in station_file_directory and inserts them into the stations
+    table in the database.
     """
     # The number of stations is <2000, so inserting in
     # one go should be fine

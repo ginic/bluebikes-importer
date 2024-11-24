@@ -59,7 +59,7 @@ def main(data_dir, is_cleanup_downloads=True, download_only=False, insert_only=F
         print("==== Initializing SpatiaLite database ====")
         insert._initialize_bluebikes_spatialite_database(db, is_new_database)
 
-    print("=== Normalizing and inserting station data ====")
+    print("==== Normalizing and inserting station data ====")
     insert._insert_stations(data_dir)
 
     print("==== Inserting bluebikes trips with %s workers ====" % worker_count)
