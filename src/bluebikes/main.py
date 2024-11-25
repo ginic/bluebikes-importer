@@ -35,12 +35,29 @@ def main_cli():
         action="store_true",
         help="Only attempt to insert records from files already download. Will fail if no files are found",
     )
+    parser.add_argument(
+        "--num_procs",
+        type=int,
+        default=4,
+        help="The number of workers used to process CSV files",
+    )
     args = parser.parse_args()
-    main(args.data_dir, not args.no_cleanup, args.download_only, args.insert_only)
+    main(
+        args.data_dir,
+        not args.no_cleanup,
+        args.download_only,
+        args.insert_only,
+        args.num_procs,
+    )
 
 
-def main(data_dir, is_cleanup_downloads=True, download_only=False, insert_only=False):
-    worker_count = os.cpu_count()
+def main(
+    data_dir,
+    is_cleanup_downloads=True,
+    download_only=False,
+    insert_only=False,
+    worker_count=4,
+):
 
     if insert_only:
         print("Running in insert_only mode. Skipping downloading of files from S3")

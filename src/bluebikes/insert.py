@@ -16,7 +16,7 @@ DATE_FORMAT_WITH_MS = "%Y-%m-%d %H:%M:%S.%f"
 
 DATABASE = "bluebike.sqlite"
 BULK_INSERT_SIZE = 1000
-DATABASE_LOCK_TIMEOUT = 900  # 15 minutes
+DATABASE_LOCK_TIMEOUT = 1800  # 30 minutes
 
 # Index for column where start and end lat and long points appear in CSVs
 # These indexes are used through 202303 (March 2023)
