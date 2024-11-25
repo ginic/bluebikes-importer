@@ -70,7 +70,7 @@ def insert_trips_from_list_of_csvs(worker_assignments, database=DATABASE):
     for f in files:
         _insert_trips_from_single_csv(f, cursor)
 
-    _dump_memory_db_to_file(memory_conn, database)
+    _dump_memory_db_trips_to_file(memory_conn, database)
     memory_conn.close()
 
 
@@ -123,13 +123,6 @@ def _insert_trips_from_single_csv(file, cursor):
 
             # newer records drop duration
             if 202304 <= month_year:
-                # Format geometry points appropriately for the month
-                start_point = get_well_known_text_point(
-                    row[START_LONGITUDE_IDX], row[START_LATITUDE_IDX]
-                )
-                end_point = get_well_known_text_point(
-                    row[END_LONGITUDE_IDX], row[END_LATITUDE_IDX]
-                )
                 date_fmt = (
                     DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
                 )
@@ -138,18 +131,6 @@ def _insert_trips_from_single_csv(file, cursor):
                 time_delta = end_date - start_date
                 row.insert(3, time_delta.total_seconds())
 
-            else:
-                start_point = get_well_known_text_point(
-                    row[START_LONGITUDE_IDX_THRU_202303],
-                    row[START_LATITUDE_IDX_THRU_202303],
-                )
-                end_point = get_well_known_text_point(
-                    row[END_LONGITUDE_IDX_THRU_202303],
-                    row[END_LATITUDE_IDX_THRU_202303],
-                )
-
-            # Add the formatted geometry points for the row
-            row.extend([start_point, end_point])
             # Add source file name as first column
             row.insert(0, file)
 
@@ -183,7 +164,9 @@ def _initialize_in_memory_database(worker_number):
     )
     _configure_sqlite_pragma(memory_conn, "memory")
     bluebikes.sql._initialize_spatialite(memory_conn)
-    _create_bluebikes_table(memory_conn)
+    # Don't enable spatial lite on the in memory DBs,
+    # it can cause a race condition on the database lock
+    _create_bluebikes_table(memory_conn, is_skip_spatial=True)
     cursor = memory_conn.cursor()
     _seed_auto_increment(cursor, worker_number)
     return memory_conn, cursor
@@ -206,7 +189,7 @@ def _seed_auto_increment(cursor, worker_number):
     cursor.execute("delete from bluebikes where rowid=?", [auto_increment_start_id])
 
 
-def _dump_memory_db_to_file(memory_conn, database=DATABASE):
+def _dump_memory_db_trips_to_file(memory_conn, database=DATABASE):
     """
     Insert data from the in-memory table to the file-based table
     """
@@ -215,39 +198,51 @@ def _dump_memory_db_to_file(memory_conn, database=DATABASE):
     )
     _configure_sqlite_pragma(file_conn)
     memory_conn.execute('ATTACH DATABASE "%s" AS filedb' % database)
-    memory_conn.execute("INSERT INTO filedb.bluebikes SELECT * FROM bluebikes")
+    memory_conn.execute(bluebikes.sql.bluebikes_insert_add_points)
     memory_conn.execute("DETACH DATABASE filedb")
     file_conn.close()
 
 
-def _create_spatial_table(
+def _create_table(
     connection,
     drop_existing_table,
     create_new_table,
-    enable_spatial_columns,
-    add_spatial_index,
+    enable_spatial_columns=None,
+    add_spatial_index=None,
 ):
     """
-    Convenience method for creating tables with spatial data columns.
+    Convenience method for creating tables.
+    If you'd also like to add spatial data columns and indices, pass well formed
+    queries to `enable_spatial_columns` and `add_spatial_index`.
     """
     connection.execute(drop_existing_table)
     connection.execute(create_new_table)
-    connection.execute(enable_spatial_columns)
-    connection.execute(add_spatial_index)
+    if enable_spatial_columns:
+        connection.execute(enable_spatial_columns)
+
+    if add_spatial_index:
+        connection.execute(add_spatial_index)
 
 
-def _create_bluebikes_table(connection):
+def _create_bluebikes_table(connection, is_skip_spatial=False):
     """
     Create the 'bluebikes' trip table, overwriting any existing table with the same name.
     The SpatiaLite extension should already be enabled in the connection.
     """
-    _create_spatial_table(
-        connection,
-        bluebikes.sql.bluebikes_table_drop,
-        bluebikes.sql.bluebikes_create,
-        bluebikes.sql.bluebikes_enable_spatialite,
-        bluebikes.sql.bluebikes_add_spatial_indexes,
-    )
+    if is_skip_spatial:
+        _create_table(
+            connection,
+            bluebikes.sql.bluebikes_table_drop,
+            bluebikes.sql.bluebikes_create,
+        )
+    else:
+        _create_table(
+            connection,
+            bluebikes.sql.bluebikes_table_drop,
+            bluebikes.sql.bluebikes_create,
+            bluebikes.sql.bluebikes_enable_spatialite,
+            bluebikes.sql.bluebikes_add_spatial_indexes,
+        )
 
 
 def _create_stations_table(connection):
@@ -255,7 +250,7 @@ def _create_stations_table(connection):
     Create the 'stations' table, overwriting any existing table with the same name.
     The SpatiaLite extension should already be enabled in the connection.
     """
-    _create_spatial_table(
+    _create_table(
         connection,
         bluebikes.sql.stations_table_drop,
         bluebikes.sql.stations_create,

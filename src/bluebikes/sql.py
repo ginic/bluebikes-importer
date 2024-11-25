@@ -60,10 +60,8 @@ INSERT INTO bluebikes (
     usertype,
     birth_year,
     gender,
-    start_point,
-    end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), ST_PointFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?;
 """
 
 # all records between 202005-bluebikes-tripdata.csv - 202303-bluebikes-tripdata.csv
@@ -84,10 +82,8 @@ INSERT INTO bluebikes (
     ride_id,
     usertype,
     postal_code,
-    start_point,
-    end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), ST_PointFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?;
 """
 
 # all records between 202304-bluebikes-tripdata.csv - 202403-bluebikes-tripdata.csv
@@ -108,10 +104,8 @@ INSERT INTO bluebikes (
     end_lat,
     end_lng,
     usertype,
-    start_point,
-    end_point
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326), ST_PointFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?;
 """
 
 # id insert
@@ -134,6 +128,32 @@ INSERT INTO bluebikes (
     usertype
 )
 VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+"""
+
+bluebikes_insert_add_points = """
+INSERT INTO filedb.bluebikes SELECT
+    id,
+    src_file,
+    tripduration,
+    started_at,
+    ended_at,
+    start_id,
+    start_station_name,
+    start_lat,
+    start_lng,
+    end_id,
+    end_station_name,
+    end_lat,
+    end_lng,
+    ride_id,
+    usertype,
+    birth_year,
+    gender,
+    rideable_type,
+    postal_code,
+    ST_SETSRID(ST_MAKEPOINT (start_lng, start_lat), 4326) as start_point,
+    ST_SETSRID(ST_MAKEPOINT (end_lng, end_lat), 4326) as end_point
+FROM bluebikes;
 """
 
 stations_table_drop = "SELECT DropTable(NULL, 'stations', True);"
