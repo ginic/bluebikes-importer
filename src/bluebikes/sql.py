@@ -59,9 +59,9 @@ INSERT INTO bluebikes (
     ride_id,
     usertype,
     birth_year,
-    gender,
+    gender
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?;
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 # all records between 202005-bluebikes-tripdata.csv - 202303-bluebikes-tripdata.csv
@@ -81,9 +81,9 @@ INSERT INTO bluebikes (
     end_lng,
     ride_id,
     usertype,
-    postal_code,
+    postal_code
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?;
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 # all records between 202304-bluebikes-tripdata.csv - 202403-bluebikes-tripdata.csv
@@ -103,9 +103,9 @@ INSERT INTO bluebikes (
     start_lng,
     end_lat,
     end_lng,
-    usertype,
+    usertype
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?;
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 # id insert
@@ -151,8 +151,8 @@ INSERT INTO filedb.bluebikes SELECT
     gender,
     rideable_type,
     postal_code,
-    ST_SETSRID(ST_MAKEPOINT (start_lng, start_lat), 4326) as start_point,
-    ST_SETSRID(ST_MAKEPOINT (end_lng, end_lat), 4326) as end_point
+    MAKEPOINT(start_lng, start_lat, 4326) as start_point,
+    MAKEPOINT(end_lng, end_lat, 4326) as end_point
 FROM bluebikes;
 """
 
