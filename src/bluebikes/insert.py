@@ -200,6 +200,7 @@ def _dump_memory_db_trips_to_file(memory_conn, database=DATABASE):
     memory_conn.execute('ATTACH DATABASE "%s" AS filedb' % database)
     memory_conn.execute(bluebikes.sql.bluebikes_insert_add_points)
     memory_conn.execute("DETACH DATABASE filedb")
+    memory_conn.commit()
     file_conn.close()
 
 
@@ -227,7 +228,9 @@ def _create_table(
 def _create_bluebikes_table(connection, is_skip_spatial=False):
     """
     Create the 'bluebikes' trip table, overwriting any existing table with the same name.
-    The SpatiaLite extension should already be enabled in the connection.
+    You can choose to skip using SpatiaLite features.
+    If you're using spatial features, the SpatiaLite extension
+    should already be enabled in the connection.
     """
     if is_skip_spatial:
         _create_table(

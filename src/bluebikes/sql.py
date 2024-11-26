@@ -1,5 +1,6 @@
 # Drop the bluebikes table from the main database, don't return an error if it doesn't exist
-bluebikes_table_drop = "SELECT DropTable(NULL, 'bluebikes', True);"
+bluebikes_spatial_table_drop = "SELECT DropTable(NULL, 'bluebikes', True);"
+bluebikes_table_drop = "DROP TABLE IF EXISTS bluebikes; "
 
 bluebikes_create = """
 CREATE TABLE bluebikes (

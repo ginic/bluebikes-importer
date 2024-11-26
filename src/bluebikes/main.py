@@ -38,7 +38,7 @@ def main_cli():
     parser.add_argument(
         "--num_procs",
         type=int,
-        default=4,
+        default=1,
         help="The number of workers used to process CSV files",
     )
     args = parser.parse_args()
@@ -56,7 +56,7 @@ def main(
     is_cleanup_downloads=True,
     download_only=False,
     insert_only=False,
-    worker_count=4,
+    worker_count=1,
 ):
 
     if insert_only:
