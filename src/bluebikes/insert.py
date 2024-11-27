@@ -244,7 +244,9 @@ def _create_bluebikes_table(connection, is_skip_spatial=False):
             bluebikes.sql.bluebikes_table_drop,
             bluebikes.sql.bluebikes_create,
             bluebikes.sql.bluebikes_enable_spatialite,
-            bluebikes.sql.bluebikes_add_spatial_indexes,
+            None,
+            # Spatial indexes make inserts very slow, so make sure they're needed
+            # bluebikes.sql.bluebikes_add_spatial_indexes,
         )
 
 

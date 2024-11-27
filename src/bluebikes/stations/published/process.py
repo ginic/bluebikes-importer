@@ -144,12 +144,16 @@ def process_to_dataframe(
     combined_df = combined_df.astype(STATION_DTYPES)
 
     if drop_duplicates_across_files:
+        # Sort to keep current stations first
         sorting_map = {f: idx for idx, f in enumerate(STATION_SRC_PRIORITIES)}
 
         combined_df = combined_df.sort_values(
             by="File", key=lambda x: x.map(sorting_map)
         )
-        columns_less_file = (set(combined_df.columns)) - set(["File"])
+        # Ignore filename and lat,long due to precision differences
+        columns_less_file = (set(combined_df.columns)) - set(
+            ["File", "Latitude", "Longitude"]
+        )
         combined_df.drop_duplicates(subset=columns_less_file, inplace=True)
 
     if simple_output:
