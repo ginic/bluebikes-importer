@@ -26,11 +26,11 @@ CREATE TABLE bluebikes (
 );
 """
 # Create columns for storing start and end points as geographic points
-# in https://epsg.io/4326
+# in https://epsg.io/3857 with distances in meters
 bluebikes_enable_spatialite = """
 SELECT
-    AddGeometryColumn('bluebikes', 'start_point', 4326, 'POINT', 'XY'),
-    AddGeometryColumn('bluebikes', 'end_point', 4326, 'POINT', 'XY');
+    AddGeometryColumn('bluebikes', 'start_point', 3857, 'POINT', 'XY'),
+    AddGeometryColumn('bluebikes', 'end_point', 3857, 'POINT', 'XY');
 """
 
 # Create spatial indexes on the start and end point columns,
@@ -152,8 +152,8 @@ INSERT INTO filedb.bluebikes SELECT
     gender,
     rideable_type,
     postal_code,
-    MAKEPOINT(start_lng, start_lat, 4326) as start_point,
-    MAKEPOINT(end_lng, end_lat, 4326) as end_point
+    MAKEPOINT(start_lng, start_lat, 3857) as start_point,
+    MAKEPOINT(end_lng, end_lat, 3857) as end_point
 FROM bluebikes;
 """
 
@@ -176,7 +176,7 @@ CREATE TABLE stations (
 
 stations_enable_spatialite = """
 SELECT
-    AddGeometryColumn('stations', 'geom_point', 4326, 'POINT', 'XY');
+    AddGeometryColumn('stations', 'geom_point', 3857, 'POINT', 'XY');
 """
 
 stations_add_spatial_index = """
@@ -196,7 +196,7 @@ INSERT INTO stations (
     geom_point
 
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 4326));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 3857));
 """
 
 
