@@ -131,6 +131,7 @@ INSERT INTO bluebikes (
 VALUES (?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 """
 
+# Insert trips, making sure points are in a map projection with meter distance units
 bluebikes_insert_add_points = """
 INSERT INTO filedb.bluebikes SELECT
     id,
@@ -152,8 +153,8 @@ INSERT INTO filedb.bluebikes SELECT
     gender,
     rideable_type,
     postal_code,
-    MAKEPOINT(start_lng, start_lat, 3857) as start_point,
-    MAKEPOINT(end_lng, end_lat, 3857) as end_point
+    ST_Transform(MAKEPOINT(start_lng, start_lat, 4326), 3857) as start_point,
+    ST_Transform(MAKEPOINT(end_lng, end_lat, 4326), 3857) as end_point
 FROM bluebikes;
 """
 
@@ -183,6 +184,8 @@ stations_add_spatial_index = """
 SELECT CreateSpatialIndex('stations', 'geom_point');
 """
 
+# Insert stations, making sure to transform from map projection
+# 4326 (degree distance) to 3857 (meter distance)
 stations_insert = """
 INSERT INTO stations (
     raw_id,
@@ -196,7 +199,7 @@ INSERT INTO stations (
     geom_point
 
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_PointFromText(?, 3857));
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_Transform(ST_PointFromText(?, 4326), 3857));
 """
 
 
