@@ -78,8 +78,8 @@ Some related things to keep in mind:
 	longer appears in the trip data, we can infer that the station has been removed,
 	but there's a possibility it may just not be used.
 
-Conceptually, we resolve duplicate station ids by drawing a 200 meter (0.12 mile) radius around each station with a unique
-identifier, using the location from the most recent CSV file if the id appears more than once.
+Conceptually, we resolve duplicate station ids by drawing a 200 meter (0.12 mile) radius around each
+station with a unique identifier, using the location from the most recent CSV file if the id appears more than once.
 Then we manually check two things for each station:
 - Stations with *different ids within the 200 meter radius*: Which stations have different ids within that radius?
 	Are those actually duplicates of the original station?
@@ -107,6 +107,7 @@ Some additional technical details of this process:
 
 
 ## Quick Guide to SQLite and SpatiaLite
+TODO
 - (SpatiaLite functions for working with geographic data)[https://www.gaia-gis.it/gaia-sins/spatialite-sql-5.1.0.html]
 
 Useful tools for querying and visualizing SpatiaLite data:

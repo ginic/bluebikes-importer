@@ -69,7 +69,8 @@ STATION_FILES = {
     },
 }
 
-# If there are duplicate ids in the stations, I want them kept in this order of importance
+# If there are duplicate ids in the stations, keep in this order of importance
+# from most recent to oldest
 STATION_SRC_PRIORITIES = [
     STATIONS_CURRENT_CSV,
     STATIONS_HUBWAY_JULY_2017_CSV,
@@ -121,9 +122,7 @@ def process_to_dataframe(
         df.rename(columns=params["rename"], inplace=True)
 
         if "Public" in df.columns:
-            df["Public"] = df["Public"].map(
-                {"Yes": True, "No": False, 1: True, 0: False}
-            )
+            df["Public"] = df["Public"].map({"Yes": True, "No": False, 1: True, 0: False})
 
         # Default to None for files that don't specify a public value
         # These will be filled with the most common value later
@@ -137,9 +136,7 @@ def process_to_dataframe(
     combined_df = pd.concat(dataframes, ignore_index=True)
 
     # Apply the function to fill NaNs for 'Publicly Exposed'
-    combined_df["Public"] = combined_df.groupby("Station ID")["Public"].transform(
-        fill_with_mode
-    )
+    combined_df["Public"] = combined_df.groupby("Station ID")["Public"].transform(fill_with_mode)
 
     combined_df = combined_df.astype(STATION_DTYPES)
 
@@ -147,13 +144,9 @@ def process_to_dataframe(
         # Sort to keep current stations first
         sorting_map = {f: idx for idx, f in enumerate(STATION_SRC_PRIORITIES)}
 
-        combined_df = combined_df.sort_values(
-            by="File", key=lambda x: x.map(sorting_map)
-        )
+        combined_df = combined_df.sort_values(by="File", key=lambda x: x.map(sorting_map))
         # Ignore filename and lat,long due to precision differences
-        columns_less_file = (set(combined_df.columns)) - set(
-            ["File", "Latitude", "Longitude"]
-        )
+        columns_less_file = (set(combined_df.columns)) - set(["File", "Latitude", "Longitude"])
         combined_df.drop_duplicates(subset=columns_less_file, inplace=True)
 
     if simple_output:
