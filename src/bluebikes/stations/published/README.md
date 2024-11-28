@@ -52,3 +52,68 @@ This tool performs some light sanitization to get all stations in the same forma
 Station ID,Name,Latitude,Longitude,Municipality,Public,# of Docks,File
 K32015,1200 Beacon St,42.34414899,-71.11467361,Brookline,True,15,current_bluebikes_stations.csv
 ```
+
+## Duplicate station resolution process
+The Bluebikes station data format in the published station comma-separated values (CSV) files
+has changed over time, which means that station information comes different sources
+with different formats, station name conventions and unique identifiers.
+This can make it challenging to track station usage over time and verify which station a Bluebikes trip
+started or ended at. In general, there are two overlapping problems that arise:
+- "Unique identifiers" (the "id" column in original CSV files) for stations are repeated over time
+	for stations that have different names and are not in the same location. These stations are clearly NOT the same,
+	but have the same id, which must be corrected by re-mapping the ids.
+- Station names and locations may change slightly over time, but the station id remains the same and inspecting
+	the metadata shows that they are truly the same station. This is typically due to minor changes in the station name
+	(for example, "175 N Harvard St" vs. "Harvard University Transportation Services - 175 North Harvard St") or
+	changes in the precision of the latitude/longitude values in the original CSV files.
+	In these cases, station information from the most recent CSV file is kept.
+
+Some related things to keep in mind:
+- Sometimes a station's location physically changes in the real world due to relocation, temporary winter stations or
+	construction, so the latitude/longitude is updated, but the station's name and id are kept.
+	In this case, the threshold for deciding when a station is "new" is unclear. If a station moves more than
+	a half mile away, but the name and id are the same, is it still the same station?
+	There is some grey area in station de-duplication.
+- There is no explicit information available about when a station was in operation. If a station's id no
+	longer appears in the trip data, we can infer that the station has been removed,
+	but there's a possibility it may just not be used.
+
+Conceptually, we resolve duplicate station ids by drawing a 200 meter (0.12 mile) radius around each station with a unique
+identifier, using the location from the most recent CSV file if the id appears more than once.
+Then we manually check two things for each station:
+- Stations with *different ids within the 200 meter radius*: Which stations have different ids within that radius?
+	Are those actually duplicates of the original station?
+	If so, add them to 'station_mapping.csv', always pointing to the most recent CSV file as containing the correct station.
+- Stations with *the same ids outside the 200 meter radius*: These are probably actually different stations.
+	A station outside the radius could be mapped to another nearby station in 'station_mapping.csv', or it might need
+	to have a new unique id created for it, which can be added to <TODO>
+
+1. Use the main `download_bluebikes` to create a `stations` table in the `bluebike.sql` table.
+	Doing this runs the `bluebikes.stations.published.process.process_to_dataframe` function to get the stations.
+	In addition, it adds a `geom_point` column showing the station's location in the
+	[EPSG 3857](https://epsg.io/3857) map projection, which allows station locations
+	to be compared in meter units.
+2. Query the `stations` table to find stations that are within 200 meters of each other (less than 0.12 miles apart),
+	but have different station ids, names or lat/long values using `duplication_geom_query.sql`. Manually inspect
+	the results of this query to find situations where the id is different, but these refer to the same station.
+	Update the `station_mapping.csv` file accordingly, pointing old station mappings to the correct
+	station id in the most recent CSV file. If the name is different, but the id is the same, these are assumed to be
+	the same station and are automatically handled by `bluebikes.stations.published.process.process_to_dataframe`.
+
+
+Some additional technical details of this process:
+- Station information from more recent files is prioritized. Whenever possible, the station name, id
+	and location will come from the latest 'current_bluebikes_stations.csv'.
+
+
+## Quick Guide to SQLite and SpatiaLite
+- (SpatiaLite functions for working with geographic data)[https://www.gaia-gis.it/gaia-sins/spatialite-sql-5.1.0.html]
+
+Useful tools for querying and visualizing SpatiaLite data:
+- (DBeaver)[https://dbeaver.com] is a free, open source tool for working with databases. You can use it to interact with the database via graphical tools or write and run SQL queries.
+- (QGIS)[https://qgis.org] is a free, open source GIS software. You can use it to [open and visualize SpatiaLite data as maps](https://docs.qgis.org/3.34/en/docs/user_manual/managing_data_source/opening_data.html#index-11).
+
+
+
+### Enabling SpatiaLite in DBeaver
+TODO
