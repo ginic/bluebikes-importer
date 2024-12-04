@@ -13,3 +13,9 @@ M32062,Inman Square at Springfield St.,current_bluebikes_stations.csv,M32010,Inm
 M32077,Cambridge Crossing at North First Street,current_bluebikes_stations.csv,M32001,Lechmere Station at Cambridge St / First St,Hubway_Stations_as_of_July_2017.csv
 S32020,Somerville Hospital,current_bluebikes_stations.csv,S32010,Somerville Hospital at Highland Ave / Crocker St,Hubway_Stations_2011_2016.csv
 V32016,Chelsea St at Vine St,current_bluebikes_stations.csv,V32009,Chelsea St at Vine St,Hubway_Stations_as_of_July_2017.csv
+OVERRIDE00001,Ferry St at Pleasantview Ave,station_id_overrides.csv,V32007,Ferry St at Pleasantview Ave,Hubway_Stations_as_of_July_2017.csv
+OVERRIDE00002,Norman St at Kelvin St,station_id_overrides.csv,V32001,Norman St at Kelvin St,Hubway_Stations_as_of_July_2017.csv
+OVERRIDE00003,Washington St at Griggs Rd,station_id_overrides.csv,K32011,Washington St at Griggs Rd,Hubway_Stations_as_of_July_2017.csv
+OVERRIDE00004,Central Square East Boston - Porter Street at London Street,station_id_overrides.csv,A32036,Central Square East Boston - Porter Street at London Street,Hubway_Stations_2011_2016.csv
+OVERRIDE00005,University of Massachusetts Boston - Integrated Sciences Complex,station_id_overrides.csv,C32014,UMass Boston Integrated Sciences Complex,Hubway_Stations_2011_2016.csv
+OVERRIDE00005,University of Massachusetts Boston - Integrated Sciences Complex,station_id_overrides.csv,C32014,University of Massachusetts Boston - Integrated Sciences Complex,previous_Hubway_Stations_as_of_July_2017.csv
