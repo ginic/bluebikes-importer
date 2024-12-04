@@ -1,1 +1,15 @@
-"correct_id","correct_src_file","correct_name","raw_id","raw_src_file","raw_name"
+correct_id,correct_name,correct_src_file,raw_id,raw_name,raw_src_file
+A32013,Surface Rd at India St,current_bluebikes_stations.csv,D32025,Milk St at India St,previous_Hubway_Stations_as_of_July_2017.csv
+A32019,175 N Harvard St,current_bluebikes_stations.csv,A32007,Harvard Real Estate - North Harvard St at Western Ave,previous_Hubway_Stations_as_of_July_2017.csv
+A32051,Day Sq,current_bluebikes_stations.csv,A32027,Chelsea St at Saratoga St,Hubway_Stations_as_of_July_2017.csv
+B32020,Burlington Ave at Brookline Ave,current_bluebikes_stations.csv,B32009,Overland St at Brookline Ave,previous_Hubway_Stations_as_of_July_2017.csv
+B32034,Boylston St at Jersey St,current_bluebikes_stations.csv,B32011,Yawkey Way at Boylston St.,Hubway_Stations_2011_2016.csv
+B32034,Boylston St at Jersey St,current_bluebikes_stations.csv,B32011,Jersey St. at Boylston St.,previous_Hubway_Stations_as_of_July_2017.csv
+C32022,Newmarket Square T Stop - Massachusetts Ave at Newmarket Square,current_bluebikes_stations.csv,C32011,South Bay Plaza,previous_Hubway_Stations_as_of_July_2017.csv
+D32010,Cross St at Hanover St,current_bluebikes_stations.csv,D32044,Boston Public Market,Hubway_Stations_as_of_July_2017.csv
+K32003,Brookline Village - Station Street at MBTA,current_bluebikes_stations.csv,K32005,Brookline Village - Station Street @ MBTA,Hubway_Stations_2011_2016.csv
+K32011,Washington Sq,current_bluebikes_stations.csv,K32002,Washington Square at Washington St. / Beacon St.,Hubway_Stations_2011_2016.csv
+M32062,Inman Square at Springfield St.,current_bluebikes_stations.csv,M32010,Inman Square at Vellucci Plaza / Hampshire St,previous_Hubway_Stations_as_of_July_2017.csv
+M32077,Cambridge Crossing at North First Street,current_bluebikes_stations.csv,M32001,Lechmere Station at Cambridge St / First St,Hubway_Stations_as_of_July_2017.csv
+S32020,Somerville Hospital,current_bluebikes_stations.csv,S32010,Somerville Hospital at Highland Ave / Crocker St,Hubway_Stations_2011_2016.csv
+V32016,Chelsea St at Vine St,current_bluebikes_stations.csv,V32009,Chelsea St at Vine St,Hubway_Stations_as_of_July_2017.csv
