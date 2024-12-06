@@ -75,10 +75,9 @@ def main(
         print("==== Initializing SpatiaLite database ====")
         insert._initialize_bluebikes_spatialite_database(db, is_new_database)
 
-        # TODO Run queries that check for duplicate stations and print warnings
-
     print("==== Normalizing and inserting station data ====")
     insert._insert_stations(data_dir)
+    insert._insert_station_mapping_links()
 
     print("==== Inserting bluebikes trips with %s workers ====" % worker_count)
     distribution = insert.evenly_distribute_csv_files_for_insert_by_total_size(worker_count, data_dir)
@@ -90,6 +89,8 @@ def main(
     )
 
     # TODO Create views that join bluebikes trips to to the corrected station info to standarize station info appearing in trips
+
+    # TODO Run queries that check for duplicate stations and print warnings
 
     # clean up all downloaded data to reduce the size of the docker image
     if is_cleanup_downloads:

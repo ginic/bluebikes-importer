@@ -12,6 +12,8 @@ STATIONS_2011_2016_CSV = "Hubway_Stations_2011_2016.csv"
 STATIONS_HUBWAY_JULY_2017_CSV = "Hubway_Stations_as_of_July_2017.csv"
 STATIONS_PREV_HUBWAY_JULY_2017_CSV = "previous_Hubway_Stations_as_of_July_2017.csv"
 
+STATION_LINKS_MAPPING = "station_mapping.csv"
+
 
 # Define the schema and names of the files to process
 STATION_FILES = {
@@ -105,6 +107,12 @@ def fill_with_mode(series):
     else:
         mode = series.mode()[0]
         return series.infer_objects(copy=False).fillna(mode)
+
+
+def get_station_links_dataframe(link_csv_path=None):
+    if link_csv_path is None:
+        link_csv_path = importlib.resources.path("bluebikes.stations.published", STATION_LINKS_MAPPING)
+    return pd.read_csv(link_csv_path, index_col=False)
 
 
 def process_to_dataframe(

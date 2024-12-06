@@ -23,11 +23,17 @@ def test_create_db(empty_test_db):
     with sqlite3.connect(empty_test_db) as conn:
         tables = list(
             conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND (name='bluebikes' OR name='stations') ORDER BY name;"
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND "
+                "(name='bluebikes' OR "
+                "name='stations' OR "
+                "name='station_links') "
+                "ORDER BY name;"
             )
         )
         assert tables[0] == ("bluebikes",)
-        assert tables[1] == ("stations",)
+        assert tables[1] == ("station_links")
+        assert tables[2] == ("stations",)
 
 
 def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
@@ -73,3 +79,11 @@ def test_insert_stations(empty_test_db, published_stations_dir):
         bluebikes.sql._enable_spatialite(conn)
         stations = list(conn.execute("SELECT * FROM stations;"))
         assert len(stations) == 8
+
+
+def test_insert_station_links(empty_test_db):
+    bluebikes.insert._insert_station_mapping_links(empty_test_db)
+
+    with sqlite3.connect(empty_test_db) as conn:
+        station_links = list(conn.execute("SELECT * FROM station_links;"))
+        assert len(station_links) == 20

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 # Drop the bluebikes table from the main database, don't return an error if it doesn't exist
 bluebikes_spatial_table_drop = "SELECT DropTable(NULL, 'bluebikes', True);"
 bluebikes_table_drop = "DROP TABLE IF EXISTS bluebikes; "
@@ -171,7 +173,8 @@ CREATE TABLE stations (
     public BOOLEAN,
     number_of_docks INTEGER NOT NULL,
     src_file TEXT NOT NULL,
-    UNIQUE(raw_id, src_file)
+    UNIQUE(raw_id, src_file),
+    UNIQUE(raw_id, name)
 );
 """
 
@@ -202,6 +205,34 @@ INSERT INTO stations (
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_Transform(ST_PointFromText(?, 4326), 3857));
 """
 
+station_mapping_drop = """SELECT DropTable(NULL, 'station_links', True);"""
+
+station_mapping_create = """
+CREATE TABLE station_links (
+    correct_id TEXT NOT NULL,
+    correct_name TEXT NOT NULL,
+    correct_src_file TEXT,
+    raw_id TEXT NOT NULL,
+    raw_name TEXT NOT NULL,
+    raw_src_file TEXT,
+    UNIQUE(correct_id, correct_name),
+    UNIQUE(raw_id, raw_name),
+    UNIQUE(correct_id, correct_name, raw_id, raw_name)
+);
+"""
+
+station_mapping_insert = """
+INSERT INTO station_links (
+    correct_id,
+    correct_name,
+    correct_src_file,
+    raw_id,
+    raw_name,
+    raw_src_file
+)
+VALUES (?, ?, ?, ?, ?, ?);
+"""
+
 
 def _initialize_spatialite(connection, is_new_database=True):
     """
@@ -220,3 +251,13 @@ def _enable_spatialite(connection):
     """
     connection.enable_load_extension(True)
     connection.load_extension("mod_spatialite")
+
+
+def execute_sql_script(connection, script_path):
+    """Executes the SQL script stored in a file path.
+    Returns the resulting cursor with script results.
+    """
+    script_contents = Path(script_path).read_text()
+    cursor = connection.cursor()
+    cursor.executescript(script_contents)
+    return cursor
