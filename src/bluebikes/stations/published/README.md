@@ -119,7 +119,9 @@ We maintain two files to help resolve the problems with station ids described ab
 
 #### station_mapping.csv
 This file maps stations from older files to their correct station ids in more recent station files. It is used to create a view
-that joins the Bluebikes trips to their correct stations by taking into account the date of the trip.
+that joins the stations from the original Bluebikes trips data ("raw" stations) to their "correct" stations.
+Note that for this join to work the pair `(correct_id, correct_name)` cannot be the same as `(raw_id, raw_name)`.
+At least one of the id or name has to be different.  
 
 ```text
 correct_id,correct_name,correct_src_file,raw_id,raw_name,raw_src_file

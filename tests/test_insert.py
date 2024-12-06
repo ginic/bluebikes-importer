@@ -31,11 +31,7 @@ def test_create_db(empty_test_db):
 
 
 def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
-    distribution = (
-        bluebikes.insert.evenly_distribute_csv_files_for_insert_by_total_size(
-            2, csv_dir
-        )
-    )
+    distribution = bluebikes.insert.evenly_distribute_csv_files_for_insert_by_total_size(2, csv_dir)
     assert len(distribution) == 2
     assert len(distribution[0]) == 1
     assert len(distribution[1]) == 1
@@ -52,7 +48,10 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
         # Query geometry points using snap to grid to fix precision
         geoms = list(
             conn.execute(
-                "SELECT ST_AsText(ST_SnapToGrid(start_point, 0.000001)), ST_AsText(ST_SnapToGrid(end_point, 0.000001)) FROM bluebikes ORDER BY started_at"
+                "SELECT "
+                "ST_AsText(ST_SnapToGrid(ST_Transform(start_point, 4326), 0.000001)), "
+                "ST_AsText(ST_SnapToGrid(ST_Transform(end_point, 4326), 0.000001)) "
+                "FROM bluebikes ORDER BY started_at"
             )
         )
         # Make sure spatial data is correcly managed
@@ -67,9 +66,10 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
 
 
 def test_insert_stations(empty_test_db, published_stations_dir):
+    # stations from stations_published_dir (3) and overrides stations (8)
     bluebikes.insert._insert_stations(published_stations_dir, empty_test_db)
 
     with sqlite3.connect(empty_test_db) as conn:
         bluebikes.sql._enable_spatialite(conn)
         stations = list(conn.execute("SELECT * FROM stations;"))
-        assert len(stations) == 3
+        assert len(stations) == 8

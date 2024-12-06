@@ -1,13 +1,17 @@
-import os
 import argparse
+import importlib.resources
+from pathlib import Path
+
 import pandas as pd
 
 DEFAULT_OUTPUT_FILE = "data/processed/all_published_stations.csv"
 
+STATION_OVERRIDES_CSV = "station_id_overrides.csv"
 STATIONS_CURRENT_CSV = "current_bluebikes_stations.csv"
 STATIONS_2011_2016_CSV = "Hubway_Stations_2011_2016.csv"
 STATIONS_HUBWAY_JULY_2017_CSV = "Hubway_Stations_as_of_July_2017.csv"
 STATIONS_PREV_HUBWAY_JULY_2017_CSV = "previous_Hubway_Stations_as_of_July_2017.csv"
+
 
 # Define the schema and names of the files to process
 STATION_FILES = {
@@ -72,6 +76,7 @@ STATION_FILES = {
 # If there are duplicate ids in the stations, keep in this order of importance
 # from most recent to oldest
 STATION_SRC_PRIORITIES = [
+    STATION_OVERRIDES_CSV,
     STATIONS_CURRENT_CSV,
     STATIONS_HUBWAY_JULY_2017_CSV,
     STATIONS_PREV_HUBWAY_JULY_2017_CSV,
@@ -103,21 +108,36 @@ def fill_with_mode(series):
 
 
 def process_to_dataframe(
-    station_file_directory,
+    station_file_directory=None,
     write_to_disk=None,
     simple_output=False,
     drop_duplicates_across_files=True,
+    is_include_station_overrides=True,
 ):
     # Initialize an empty list to store dataframes
     dataframes = []
 
+    station_csv_paths = []
+
+    if is_include_station_overrides:
+        station_csv_paths.append(importlib.resources.path("bluebikes.stations.published", STATION_OVERRIDES_CSV))
+
+    if station_file_directory is not None:
+        for file in STATION_FILES.keys():
+            station_csv_paths.append(Path(station_file_directory) / file)
+
     # Read each file, rename columns, and append to list
-    for file, params in STATION_FILES.items():
-        print("Parsing %s" % file)
-        file_path = os.path.join(os.getcwd(), station_file_directory, file)
+    for file_path in station_csv_paths:
+        file_name = file_path.name
+        print("Parsing %s" % file_name)
+        # Overrides are formatted like the current csv file
+        if file_name == STATION_OVERRIDES_CSV:
+            params = STATION_FILES[STATIONS_CURRENT_CSV]
+        else:
+            params = STATION_FILES[file_name]
 
         # skip the Last Updated row for the following file
-        skip = 1 if file == "current_bluebikes_stations.csv" else 0
+        skip = 1 if file_name == "current_bluebikes_stations.csv" else 0
         df = pd.read_csv(file_path, skiprows=skip, usecols=params["usecols"])
         df.rename(columns=params["rename"], inplace=True)
 
@@ -129,7 +149,7 @@ def process_to_dataframe(
         if "default_public" in params:
             df["Public"] = params["default_public"]
 
-        df["File"] = file
+        df["File"] = file_name
         dataframes.append(df)
 
     # Concatenate all dataframes
@@ -139,15 +159,16 @@ def process_to_dataframe(
     combined_df["Public"] = combined_df.groupby("Station ID")["Public"].transform(fill_with_mode)
 
     combined_df = combined_df.astype(STATION_DTYPES)
+    print("Total station rows read from CSV files:", len(combined_df))
 
     if drop_duplicates_across_files:
         # Sort to keep current stations first
         sorting_map = {f: idx for idx, f in enumerate(STATION_SRC_PRIORITIES)}
-
         combined_df = combined_df.sort_values(by="File", key=lambda x: x.map(sorting_map))
-        # Ignore filename and lat,long due to precision differences
-        columns_less_file = (set(combined_df.columns)) - set(["File", "Latitude", "Longitude"])
-        combined_df.drop_duplicates(subset=columns_less_file, inplace=True)
+
+        # Drop duplicate station ids, keep the ones specified by sort priority
+        combined_df.drop_duplicates(subset=["Station ID"], inplace=True, keep="first")
+        print("Total stations remaining after deduplication:", len(combined_df))
 
     if simple_output:
         combined_df.drop("Municipality", axis=1, inplace=True)
@@ -157,10 +178,11 @@ def process_to_dataframe(
 
     if write_to_disk is not None:
         output_file = write_to_disk
-        output_dir = os.path.dirname(output_file)
-        if not (os.path.exists(output_dir) and os.path.isdir(output_dir)):
+        output_dir = Path(output_file)
+        if not (output_dir.exists() and output_dir.is_dir()):
             print("Creating output directory: ", output_dir)
-            os.makedirs(output_dir)
+            output_dir.mkdir(parents=True)
+
         print("Writing to disk: ", output_file)
         with open(output_file, "w") as f:
             combined_df.to_csv(f, index=False)
