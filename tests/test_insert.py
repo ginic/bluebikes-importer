@@ -32,7 +32,7 @@ def test_create_db(empty_test_db):
             )
         )
         assert tables[0] == ("bluebikes",)
-        assert tables[1] == ("station_links")
+        assert tables[1] == ("station_links",)
         assert tables[2] == ("stations",)
 
 
@@ -51,21 +51,29 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
         bluebikes.sql._enable_spatialite(conn)
         result = list(conn.execute("SELECT COUNT(*) FROM bluebikes"))
         assert result == [(2,)]
-        # Query geometry points using snap to grid to fix precision
+        # Query temporal and geometry points using snap to grid to fix precision
         geoms = list(
             conn.execute(
                 "SELECT "
+                "tripduration, "
+                "started_at, "
+                "ended_at, "
                 "ST_AsText(ST_SnapToGrid(ST_Transform(start_point, 4326), 0.000001)), "
                 "ST_AsText(ST_SnapToGrid(ST_Transform(end_point, 4326), 0.000001)) "
                 "FROM bluebikes ORDER BY started_at"
             )
         )
-        # Make sure spatial data is correcly managed
         assert geoms[0] == (
+            "542",
+            "2015-01-01 00:21:44",
+            "2015-01-01 00:30:47",
             "POINT(-71.119084 42.387995)",
             "POINT(-71.111075 42.373379)",
         )
         assert geoms[1] == (
+            "8270",
+            "2024-04-30 16:56:01",
+            "2024-04-30 19:12:48",
             "POINT(-71.056438 42.406721)",
             "POINT(-71.047314 42.403369)",
         )
@@ -82,7 +90,7 @@ def test_insert_stations(empty_test_db, published_stations_dir):
 
 
 def test_insert_station_links(empty_test_db):
-    bluebikes.insert._insert_station_mapping_links(empty_test_db)
+    bluebikes.insert._insert_station_mapping_links(database=empty_test_db)
 
     with sqlite3.connect(empty_test_db) as conn:
         station_links = list(conn.execute("SELECT * FROM station_links;"))

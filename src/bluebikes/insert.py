@@ -137,7 +137,7 @@ def _insert_trips_from_single_csv(file, cursor):
                 end_date = datetime.strptime(row[3], date_fmt)
                 start_date = datetime.strptime(row[2], date_fmt)
                 time_delta = end_date - start_date
-                row.insert(3, time_delta.total_seconds())
+                row.insert(2, time_delta.total_seconds())
 
             # Add source file name as first column
             row.insert(0, file)

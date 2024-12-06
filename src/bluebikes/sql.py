@@ -258,6 +258,5 @@ def execute_sql_script(connection, script_path):
     Returns the resulting cursor with script results.
     """
     script_contents = Path(script_path).read_text()
-    cursor = connection.cursor()
-    cursor.executescript(script_contents)
+    cursor = connection.execute(script_contents)
     return cursor
