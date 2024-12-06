@@ -110,7 +110,7 @@ def _insert_station_mapping_links(station_links_csv=None, database=DATABASE):
     with sqlite3.connect(database) as conn:
         links_df = bbstations.get_station_links_dataframe(station_links_csv)
         cursor = conn.cursor()
-        cursor.executemany(bluebikes.sql.stations_insert, links_df.values.tolist())
+        cursor.executemany(bluebikes.sql.station_mapping_insert, links_df.values.tolist())
 
 
 def _insert_trips_from_single_csv(file, cursor):

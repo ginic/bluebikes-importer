@@ -215,8 +215,7 @@ CREATE TABLE station_links (
     raw_id TEXT NOT NULL,
     raw_name TEXT NOT NULL,
     raw_src_file TEXT,
-    UNIQUE(correct_id, correct_name),
-    UNIQUE(raw_id, raw_name),
+    UNIQUE(raw_id, raw_name), -- Raw stations should only be mapped once
     UNIQUE(correct_id, correct_name, raw_id, raw_name)
 );
 """
