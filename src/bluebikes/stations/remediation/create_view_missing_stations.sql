@@ -1,3 +1,9 @@
+/*Creates views (saved queries) that are useful for examining stations that are
+missing metadata
+*/
+
+--Stations that appear in trips, but not station metadata files
+DROP VIEW IF EXISTS missing_stations;
 CREATE VIEW missing_stations AS
 SELECT
     station_id,
@@ -9,6 +15,8 @@ SELECT
 FROM all_trips_stations WHERE normalized_id IS NULL
 ORDER BY total_trips DESC;
 
+--Join missing metadata stations with nearby stations
+DROP VIEW IF EXISTS missing_stations_resolution;
 CREATE VIEW missing_stations_resolution AS
 SELECT
 	s1.station_id AS missing_station_id,

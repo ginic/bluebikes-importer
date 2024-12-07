@@ -101,17 +101,16 @@ def _insert_stations(station_file_directory, database=DATABASE):
         cursor.executemany(bluebikes.sql.stations_insert, stations_df.values.tolist())
 
 
-def _insert_station_mapping_links(station_links_csv=None, database=DATABASE):
+def _insert_station_mapping_links(connection, station_links_csv=None):
     """Inserts station mappings from a CSV file with the header:
     `correct_id,correct_name,correct_src_file,raw_id,raw_name,raw_src_file`
 
     If no CSV file is provided, the packaged station link mapping will be used.
     """
-    with sqlite3.connect(database) as conn:
-        links_df = bbstations.get_station_links_dataframe(station_links_csv)
-        cursor = conn.cursor()
-        # Insert explicit mappings
-        cursor.executemany(bluebikes.sql.station_mapping_insert, links_df.values.tolist())
+
+    links_df = bbstations.get_station_links_dataframe(station_links_csv)
+    # Insert explicit mappings
+    connection.executemany(bluebikes.sql.station_mapping_insert, links_df.values.tolist())
 
 
 def _insert_trips_from_single_csv(file, cursor):
@@ -278,6 +277,7 @@ def _create_station_links_table(connection):
         bluebikes.sql.station_mapping_drop,
         bluebikes.sql.station_mapping_create,
     )
+    _insert_station_mapping_links(connection)
 
 
 def _initialize_bluebikes_spatialite_database(connection, is_new_database=True):
@@ -287,4 +287,3 @@ def _initialize_bluebikes_spatialite_database(connection, is_new_database=True):
     bluebikes.sql._initialize_spatialite(connection, is_new_database)
     _create_bluebikes_table(connection)
     _create_stations_table(connection)
-    _create_station_links_table(connection)

@@ -1,6 +1,7 @@
 /*Shows how every possible station from the bluebikes trips would be mapped
 for normalization.
 */
+SELECT DropTable(NULL, 'all_trips_stations', True);
 CREATE TABLE all_trips_stations (
 	station_id TEXT,
 	station_name TEXT,
