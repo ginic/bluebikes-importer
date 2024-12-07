@@ -112,8 +112,6 @@ def _insert_station_mapping_links(station_links_csv=None, database=DATABASE):
         cursor = conn.cursor()
         # Insert explicit mappings
         cursor.executemany(bluebikes.sql.station_mapping_insert, links_df.values.tolist())
-        # All other stations are mapped to themselves
-        cursor.execute(bluebikes.sql.station_mapping_link_stations_to_self)
 
 
 def _insert_trips_from_single_csv(file, cursor):

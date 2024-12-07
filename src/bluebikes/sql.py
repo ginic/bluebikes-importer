@@ -232,27 +232,6 @@ INSERT INTO station_links (
 VALUES (?, ?, ?, ?, ?, ?);
 """
 
-station_mapping_link_stations_to_self = """
-INSERT INTO station_links
-    SELECT DISTINCT
-        raw_id as correct_id,
-        name as correct_name,
-        src_file as correct_src_file,
-        raw_id as raw_id,
-        name as raw_name,
-        src_file as raw_src_file
-    FROM stations s
-    WHERE
-    NOT EXISTS (
-        SELECT
-            raw_id,
-            raw_name,
-            raw_src_file
-        FROM station_links sl
-        WHERE s.raw_id=sl.raw_id AND s.name = sl.raw_name AND s.src_file = sl.raw_src_file
-);
-"""
-
 
 def _initialize_spatialite(connection, is_new_database=True):
     """
@@ -278,5 +257,5 @@ def execute_sql_script(connection, script_path):
     Returns the resulting cursor with script results.
     """
     script_contents = Path(script_path).read_text()
-    cursor = connection.execute(script_contents)
+    cursor = connection.executescript(script_contents)
     return cursor

@@ -94,21 +94,24 @@ def main(
         # TODO Make this a table, not a view, so it's not slow to query
         # Create views that join bluebikes trips to the corrected station info
         # to standarize station info appearing in trips
-        print("==== Creating view of trips with normalized station data ====")
+        print("==== Creating view of normalized station mappings ====")
         bbsql.execute_sql_script(
-            db, importlib.resources.path("bluebikes.stations.published", "create_view_normalized_bluebikes.sql")
+            db,
+            importlib.resources.path(
+                "bluebikes.stations.remediation",
+                "create_table_all_stations_mapped.sql",
+            ),
         )
         db.commit()
 
         # Create an view for inspecting stations that appear in trips data, but not
         # station CSV files
-        print("==== Creating view of stations found only in trips data ====")
+        print("==== Creating views of stations with missing metadata ====")
         bbsql.execute_sql_script(
-            db, importlib.resources.path("bluebikes.stations.remediation", "create_view_missing_stations.sql")
+            db,
+            importlib.resources.path("bluebikes.stations.remediation", "create_view_missing_stations.sql"),
         )
         db.commit()
-
-    # TODO Run queries that check for duplicate stations and print warnings
 
     # clean up all downloaded data to reduce the size of the docker image
     if is_cleanup_downloads:

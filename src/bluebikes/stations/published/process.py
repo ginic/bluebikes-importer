@@ -13,10 +13,8 @@ STATIONS_2011_2016_CSV = "Hubway_Stations_2011_2016.csv"
 STATIONS_HUBWAY_JULY_2017_CSV = "Hubway_Stations_as_of_July_2017.csv"
 STATIONS_PREV_HUBWAY_JULY_2017_CSV = "previous_Hubway_Stations_as_of_July_2017.csv"
 
-
 # Files we need to maintain in the repo
 STATION_LINKS_MAPPING = "station_mapping.csv"
-MISSING_STATIONS_CSV = "missing_stations.csv"
 
 # Define the schema and names of the files to process
 STATION_FILES = {
@@ -76,7 +74,6 @@ STATION_FILES = {
         ],
         "rename": {"Station": "Name", "publiclyExposed": "Public"},
     },
-    MISSING_STATIONS_CSV: {"usecols": ["Station ID", "Name", "Latitude", "Longitude"]},
 }
 
 # If there are duplicate ids in the stations, keep in this order of importance
@@ -87,7 +84,6 @@ STATION_SRC_PRIORITIES = [
     STATIONS_HUBWAY_JULY_2017_CSV,
     STATIONS_PREV_HUBWAY_JULY_2017_CSV,
     STATIONS_2011_2016_CSV,
-    MISSING_STATIONS_CSV,
 ]
 
 # These are the columns and their data types will appear in the final dataframe
@@ -126,7 +122,6 @@ def process_to_dataframe(
     simple_output=False,
     drop_duplicates_across_files=True,
     is_include_station_overrides=True,
-    is_include_missing_stations=True,
 ):
     # Initialize an empty list to store dataframes
     dataframes = []
@@ -135,9 +130,6 @@ def process_to_dataframe(
 
     if is_include_station_overrides:
         station_csv_paths.append(importlib.resources.path("bluebikes.stations.published", STATION_OVERRIDES_CSV))
-
-    if is_include_missing_stations:
-        station_csv_paths.append(importlib.resources.path("bluebikes.stations.published", MISSING_STATIONS_CSV))
 
     if station_file_directory is not None:
         for file in STATION_FILES.keys():
