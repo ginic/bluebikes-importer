@@ -169,9 +169,9 @@ CREATE TABLE stations (
     name TEXT NOT NULL,
     latitude REAL,
     longitude REAL,
-    municipality TEXT NOT NULL,
+    municipality TEXT,
     public BOOLEAN,
-    number_of_docks INTEGER NOT NULL,
+    number_of_docks INTEGER,
     src_file TEXT NOT NULL,
     UNIQUE(raw_id, src_file),
     UNIQUE(raw_id, name)
@@ -215,8 +215,8 @@ CREATE TABLE station_links (
     raw_id TEXT NOT NULL,
     raw_name TEXT NOT NULL,
     raw_src_file TEXT,
-    UNIQUE(raw_id, raw_name), -- Raw stations should only be mapped once
-    UNIQUE(correct_id, correct_name, raw_id, raw_name)
+    PRIMARY KEY(raw_id, raw_name),
+    FOREIGN KEY(correct_id, correct_name) REFERENCES stations(raw_id, name)
 );
 """
 
@@ -230,6 +230,27 @@ INSERT INTO station_links (
     raw_src_file
 )
 VALUES (?, ?, ?, ?, ?, ?);
+"""
+
+station_mapping_link_stations_to_self = """
+INSERT INTO station_links
+    SELECT DISTINCT
+        raw_id as correct_id,
+        name as correct_name,
+        src_file as correct_src_file,
+        raw_id as raw_id,
+        name as raw_name,
+        src_file as raw_src_file
+    FROM stations s
+    WHERE
+    NOT EXISTS (
+        SELECT
+            raw_id,
+            raw_name,
+            raw_src_file
+        FROM station_links sl
+        WHERE s.raw_id=sl.raw_id AND s.name = sl.raw_name AND s.src_file = sl.raw_src_file
+);
 """
 
 

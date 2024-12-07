@@ -42,6 +42,12 @@ Number,Name,Latitude,Longitude,District,Public,Total docks
 K32015,1200 Beacon St,42.34414899,-71.11467361,Brookline,Yes,15
 ```
 
+### Missing stations
+There are station ids and names that appear in the Bluebikes trips data, but are
+not listed in the published station files. These are listed in `missing_stations.csv`
+with latitude and longitude values estimated from the centroid of points they appeared
+with in the trip data. This was generated with a saved query available in
+`src/bluebikes/stations/remediation/create_view_missing_stations.sql`.
 
 ## Data sanitization
 This tool performs some light sanitization to get all stations in the same format. It accomplishes this by migrating the `Public` field to a boolean True/False in addition to inferring null values for the field.
@@ -114,14 +120,14 @@ Some additional details of this station de-duplication process:
 	However, if a station moved less than 200 meters, but is at a different intersection across a busy street, then it's a "different" station.
 
 
-### Station ID Conflict Resolution
+### Station ID conflict resolution
 We maintain two files to help resolve the problems with station ids described above.
 
 #### station_mapping.csv
 This file maps stations from older files to their correct station ids in more recent station files. It is used to create a view
 that joins the stations from the original Bluebikes trips data ("raw" stations) to their "correct" stations.
 Note that for this join to work the pair `(correct_id, correct_name)` cannot be the same as `(raw_id, raw_name)`.
-At least one of the id or name has to be different.  
+At least one of the id or name has to be different.
 
 ```text
 correct_id,correct_name,correct_src_file,raw_id,raw_name,raw_src_file
@@ -142,7 +148,7 @@ OVERRIDE00001,Ferry St at Pleasantview Ave,42.4091487775453,-71.0459768400506,Ev
 OVERRIDE00002,Norman St at Kelvin St,42.4058117170059,-71.0670885072068,Everett,1,15
 ```
 
-## Quick Guide to SQLite and SpatiaLite
+## Quick guide to SQLite and SpatiaLite
 TODO
 - (SpatiaLite functions for working with geographic data)[https://www.gaia-gis.it/gaia-sins/spatialite-sql-5.1.0.html]
 

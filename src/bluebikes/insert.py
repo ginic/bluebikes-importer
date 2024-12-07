@@ -110,7 +110,10 @@ def _insert_station_mapping_links(station_links_csv=None, database=DATABASE):
     with sqlite3.connect(database) as conn:
         links_df = bbstations.get_station_links_dataframe(station_links_csv)
         cursor = conn.cursor()
+        # Insert explicit mappings
         cursor.executemany(bluebikes.sql.station_mapping_insert, links_df.values.tolist())
+        # All other stations are mapped to themselves
+        cursor.execute(bluebikes.sql.station_mapping_link_stations_to_self)
 
 
 def _insert_trips_from_single_csv(file, cursor):
@@ -140,7 +143,7 @@ def _insert_trips_from_single_csv(file, cursor):
                 row.insert(2, time_delta.total_seconds())
 
             # Add source file name as first column
-            row.insert(0, file)
+            row.insert(0, os.path.basename(file))
 
             if insert_count == BULK_INSERT_SIZE:
                 _bulk_insert_trips_by_schema(data_to_insert, month_year, cursor)
@@ -220,7 +223,7 @@ def _create_table(
     If you'd also like to add spatial data columns and indices, pass well formed
     queries to `enable_spatial_columns` and `add_spatial_index`.
     """
-    connection.execute(drop_existing_table)
+    connection.executescript(drop_existing_table)
     connection.execute(create_new_table)
     if enable_spatial_columns:
         connection.execute(enable_spatial_columns)

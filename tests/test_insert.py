@@ -55,6 +55,7 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
         geoms = list(
             conn.execute(
                 "SELECT "
+                "src_file, "
                 "tripduration, "
                 "started_at, "
                 "ended_at, "
@@ -64,6 +65,7 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
             )
         )
         assert geoms[0] == (
+            "201501_old_format_tripdata.csv",
             542,
             "2015-01-01 00:21:44",
             "2015-01-01 00:30:47",
@@ -71,6 +73,7 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
             "POINT(-71.111075 42.373379)",
         )
         assert geoms[1] == (
+            "202404_new_format_tripdata.csv",
             8207,
             "2024-04-30 16:56:01",
             "2024-04-30 19:12:48",

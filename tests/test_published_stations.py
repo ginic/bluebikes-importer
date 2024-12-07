@@ -2,7 +2,9 @@ from bluebikes.stations.published.process import process_to_dataframe
 
 
 def test_published_stations_from_csvs(published_stations_dir):
-    all_published_stations_df = process_to_dataframe(published_stations_dir, is_include_station_overrides=False)
+    all_published_stations_df = process_to_dataframe(
+        published_stations_dir, is_include_station_overrides=False, is_include_missing_stations=False
+    )
     all_published_stations = all_published_stations_df.to_dict(orient="list")
     expected_mappings = {
         "Station ID": ["K32015", "A32000", "A32019"],
@@ -39,6 +41,7 @@ def test_published_stations_from_csvs_keep_duplicates(published_stations_dir):
         published_stations_dir,
         drop_duplicates_across_files=False,
         is_include_station_overrides=False,
+        is_include_missing_stations=False,
     )
     all_published_stations = all_published_stations_df.to_dict(orient="list")
     expected_mappings = {
@@ -68,5 +71,5 @@ def test_published_stations_from_csvs_keep_duplicates(published_stations_dir):
 
 
 def test_published_stations_overrides():
-    station_overrides_df = process_to_dataframe()
+    station_overrides_df = process_to_dataframe(is_include_missing_stations=False)
     assert station_overrides_df.shape == (5, 8)
