@@ -1,23 +1,25 @@
 import glob
 import os
 import shutil
+from urllib.request import urlretrieve
 import zipfile
 
 import boto3
 from botocore import client, UNSIGNED
 from tqdm.contrib.concurrent import process_map
 
-BUCKET_NAME = 'hubway-data'
+BUCKET_NAME = "hubway-data"
+LATEST_CURRENT_STATIONS_URL = (
+    "https://lyft-lastmile-production-iad.s3.amazonaws.com/static/blue-bikes/current_bluebikes_stations.csv?version=2"
+)
+
 
 boto_config = client.Config(
-    region_name='us-east-2',
+    region_name="us-east-2",
     signature_version=UNSIGNED,  # anonymous public access credentials
-    retries={
-        'max_attempts': 3,
-        'mode': 'standard'
-    }
+    retries={"max_attempts": 3, "mode": "standard"},
 )
-s3 = boto3.client('s3', config=boto_config)
+s3 = boto3.client("s3", config=boto_config)
 
 
 def download_and_extract(workers, data_dir):
@@ -30,13 +32,17 @@ def download_and_extract(workers, data_dir):
     process_map(_extract_zip, zip_files, target_dirs, max_workers=workers)
 
     # some of the BB files were zipped with hidden __MACOSX directories
-    mac_artifact = os.path.join(data_dir, '__MACOSX')
+    mac_artifact = os.path.join(data_dir, "__MACOSX")
     shutil.rmtree(mac_artifact)
+
+    print("==== Downloading latest current_bluebikes_stations.csv ====")
+    csv_download_path = os.path.join(data_dir, "current_bluebikes_stations.csv")
+    urlretrieve(LATEST_CURRENT_STATIONS_URL, csv_download_path)
 
 
 def _download_file(object_to_download, data_dir):
     object_name, size = object_to_download
-    file_name = object_name.split('/')[-1]
+    file_name = object_name.split("/")[-1]
     file_path = os.path.join(data_dir, file_name)
     if os.path.isfile(file_path) and os.stat(file_path).st_size == size:
         return
@@ -46,12 +52,12 @@ def _download_file(object_to_download, data_dir):
 
 def _get_files_to_download(bucket):
     response = s3.list_objects_v2(Bucket=bucket)
-    files_in_bucket = [(item['Key'], item['Size']) for item in response['Contents']]
+    files_in_bucket = [(item["Key"], item["Size"]) for item in response["Contents"]]
     return files_in_bucket
 
 
 def _get_files_to_unzip(data_dir):
-    pattern = os.path.join(data_dir, '*.zip')
+    pattern = os.path.join(data_dir, "*.zip")
     return glob.glob(pattern)
 
 

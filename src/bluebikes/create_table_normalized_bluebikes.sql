@@ -70,7 +70,9 @@ SELECT
 	links1.normalized_geom_point AS start_point,
 	links2.normalized_geom_point AS end_point
 FROM bluebikes b
--- start station corrected
-JOIN all_trips_stations links1 ON links1.station_id = b.start_id AND links1.station_name = b.start_station_name
--- end station corrected
-JOIN all_trips_stations links2 ON links2.station_id = b.end_id and links2.station_name = b.end_station_name;
+-- start station correctly mapped
+INNER JOIN all_trips_stations links1 ON (links1.station_id = b.start_id AND links1.station_name = b.start_station_name)
+-- end station correctly mapped
+INNER JOIN all_trips_stations links2 ON (links2.station_id = b.end_id AND links2.station_name = b.end_station_name)
+-- ignore mappings with missing station metadata
+WHERE links1.normalized_id IS NOT NULL AND links2.normalized_id IS NOT NULL;
