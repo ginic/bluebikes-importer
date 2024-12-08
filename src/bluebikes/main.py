@@ -103,7 +103,7 @@ def main(
             bbinsert._create_station_links_table(db)
             db.commit()
 
-            print("==== Creating view of full normalized station mappings ====")
+            print("==== Creating view of fully normalized station mappings ====")
             bbsql.execute_sql_script(
                 db,
                 importlib.resources.path(

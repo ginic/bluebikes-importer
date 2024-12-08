@@ -51,6 +51,7 @@ remapped_stations AS ( -- Add in explicitly re-mapped stations
 		ST_X(e.geom_estimated) AS estimated_longitude,
         ST_Transform(e.geom_estimated, 3857) AS geom_estimated, -- convert back to SRID 3857 for storage
         -- This is the potential join key with stations
+        -- There might be no correction, in which case fall back to use the original id
         COALESCE(station_links.correct_id, e.station_id) AS normalized_id
     FROM estimated_stations AS e
     LEFT JOIN station_links ON (
