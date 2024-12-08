@@ -13,6 +13,7 @@ CREATE TABLE all_trips_stations (
     normalized_name TEXT,
     normalized_latitude FLOAT,
     normalized_longitude FLOAT
+    distance_meters INTEGER,
 );
 
 SELECT
@@ -38,6 +39,7 @@ estimated_stations AS ( -- Compute number of trips and estimate station location
         station_id,
         station_name,
         COUNT(*) AS total_trips,
+        -- Transform location to SRID 4326 to extract lat/long easily
         ST_Transform(ST_Centroid(ST_Collect(geom_point)), 4326) AS geom_estimated
     FROM all_trips_stations
     GROUP BY station_id, station_name
@@ -77,12 +79,13 @@ SELECT
 	r.total_trips AS total_trips,
     r.estimated_latitude AS estimated_latitude,
 	r.estimated_longitude AS estimated_longitude,
-	r.geom_estimated AS geom_estimated, -- convert back to SRID 3857 for storage
+	r.geom_estimated AS geom_estimated,
     -- Normalized station information could be NULL for missing station data
     stations.raw_id AS normalized_id,
     stations.name AS normalized_name,
     stations.latitude AS normalized_latitude,
     stations.longitude AS normalized_longitude,
     stations.geom_point AS normalized_geom_point
+    Distance(r.geom_estimated, stations.geom_point) as distance_meters
 FROM remapped_stations r
 LEFT JOIN stations ON r.normalized_id = stations.raw_id;

@@ -2,6 +2,9 @@
 than 200 meters apart. To keep the number of results down,each source file is only
 compared with itself and earlier station source files.
 */
+
+DROP VIEW IF EXISTS potential_station_duplicates_nearby;
+CREATE VIEW potential_station_duplicates_nearby AS
 SELECT
     s1.raw_id AS raw_id1,
     s1.name AS name1,

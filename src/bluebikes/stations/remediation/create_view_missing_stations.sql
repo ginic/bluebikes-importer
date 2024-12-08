@@ -1,5 +1,5 @@
-/*Creates views (saved queries) that are useful for examining stations that are
-missing metadata
+/*Creates views (saved queries) that are useful for examining stations that appear in trips,
+but are missing from the stations table and original s3 bucket CSV files.
 */
 
 --Stations that appear in trips, but not station metadata files
