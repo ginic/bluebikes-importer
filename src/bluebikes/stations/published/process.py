@@ -21,17 +21,18 @@ STATION_FILES = {
     STATIONS_CURRENT_CSV: {
         "usecols": [
             "Number",
-            "Name",
-            "Latitude",
-            "Longitude",
-            "District",
-            "Public",
-            "Total docks",
+            "NAME",
+            "Lat",
+            "Long",
+            "Municipality",
+            "Total Docks",
         ],
         "rename": {
             "Number": "Station ID",
-            "District": "Municipality",
-            "Total docks": "# of Docks",
+            "Total Docks": "# of Docks",
+            "Lat": "Latitude",
+            "Long": "Longitude",
+            "NAME": "Name",
         },
     },
     STATIONS_2011_2016_CSV: {
