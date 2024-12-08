@@ -123,7 +123,8 @@ def main(
             db.commit()
 
     # clean up all downloaded data to reduce the size of the docker image
-    if is_cleanup_downloads:
+    if is_cleanup_downloads and not (postproc_only or download_only):
+        print("==== Removing downloaded files ====")
         shutil.rmtree(data_dir)
 
 
