@@ -93,7 +93,7 @@ STATION_DTYPES = {
     "Latitude": float,
     "Longitude": float,
     "Public": bool,
-    "# of Docks": int,
+    "# of Docks": "float64",  # prevents errors about null values vs. 'int'
     "Station ID": str,
     "File": str,
     "Municipality": str,
