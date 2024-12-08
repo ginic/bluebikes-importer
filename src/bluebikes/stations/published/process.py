@@ -34,6 +34,7 @@ STATION_FILES = {
             "Long": "Longitude",
             "NAME": "Name",
         },
+        "default_public": True,
     },
     STATIONS_2011_2016_CSV: {
         "usecols": [
