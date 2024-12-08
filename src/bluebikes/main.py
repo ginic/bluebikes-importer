@@ -95,7 +95,7 @@ def main(
             max_workers=worker_count,
         )
 
-    if insert_only or postproc_only:
+    if not download_only:
         with sqlite3.connect(bbinsert.DATABASE) as db:
             bbsql._enable_spatialite(db)
 
