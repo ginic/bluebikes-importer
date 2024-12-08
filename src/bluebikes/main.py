@@ -115,12 +115,17 @@ def main(
 
             # Create an view for inspecting stations that appear in trips data, but not
             # station CSV files
-            print("==== Creating views of stations with missing metadata ====")
-            bbsql.execute_sql_script(
-                db,
-                importlib.resources.path("bluebikes.stations.remediation", "create_view_missing_stations.sql"),
-            )
-            db.commit()
+            print("==== Creating views of stations with duplicate or missing metadata ====")
+            for view_creation in [
+                "create_view_missing_stations.sql",
+                "create_view_nearby_duplicate_stations.sql",
+                "create_view_distant_duplicate_stations.sql",
+            ]:
+                bbsql.execute_sql_script(
+                    db,
+                    importlib.resources.path("bluebikes.stations.remediation", view_creation),
+                )
+                db.commit()
 
             # Create table of normalized bluebikes trips
             print("==== Creating table with normalized Bluebikes trips ====")
