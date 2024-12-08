@@ -122,6 +122,14 @@ def main(
             )
             db.commit()
 
+            # Create table of normalized bluebikes trips
+            print("==== Creating table with normalized Bluebikes trips ====")
+            bbsql.execute_sql_script(
+                db,
+                importlib.resources.path("bluebikes", "create_table_normalized_bluebikes.sql"),
+            )
+            db.commit()
+
     # clean up all downloaded data to reduce the size of the docker image
     if is_cleanup_downloads and not (postproc_only or download_only):
         print("==== Removing downloaded files ====")
