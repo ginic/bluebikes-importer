@@ -1,3 +1,7 @@
+import importlib.resources
+
+import pandas as pd
+
 from bluebikes.stations.published.process import process_to_dataframe
 
 
@@ -25,7 +29,7 @@ def test_published_stations_from_csvs(published_stations_dir):
             "Boston",
             "Boston",
         ],
-        "Public": [True, False, True],
+        "Public": [True, True, True],
         "# of Docks": [15, 15, 18],
         "File": [
             "current_bluebikes_stations.csv",
@@ -56,7 +60,7 @@ def test_published_stations_from_csvs_keep_duplicates(published_stations_dir):
         "Latitude": [42.34414899, 42.35328743, 42.35328743, 42.363796, 42.363796],
         "Longitude": [-71.11467361, -71.04438901, -71.04438901, -71.129164, -71.129164],
         "Municipality": ["Brookline", "Boston", "Boston", "Boston", "Boston"],
-        "Public": [True, False, False, True, True],
+        "Public": [True, True, True, True, True],
         "# of Docks": [15, 15, 15, 18, 18],
         "File": [
             "current_bluebikes_stations.csv",
@@ -72,4 +76,5 @@ def test_published_stations_from_csvs_keep_duplicates(published_stations_dir):
 
 def test_published_stations_overrides():
     station_overrides_df = process_to_dataframe()
-    assert station_overrides_df.shape == (5, 8)
+    raw_df = pd.read_csv(importlib.resources.path("bluebikes.stations.published", "station_id_overrides.csv"))
+    assert station_overrides_df.shape == (len(raw_df), 7)

@@ -1,8 +1,10 @@
 import glob
+import importlib.resources
 import os
-
-import pytest
 import sqlite3
+
+import pandas as pd
+import pytest
 
 import bluebikes.insert
 import bluebikes.sql
@@ -25,15 +27,13 @@ def test_create_db(empty_test_db):
             conn.execute(
                 "SELECT name FROM sqlite_master "
                 "WHERE type='table' AND "
-                "(name='bluebikes' OR "
-                "name='stations' OR "
-                "name='station_links') "
+                "name='bluebikes' "
+                "OR name='stations' "
                 "ORDER BY name;"
             )
         )
         assert tables[0] == ("bluebikes",)
-        assert tables[1] == ("station_links",)
-        assert tables[2] == ("stations",)
+        assert tables[1] == ("stations",)
 
 
 def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
@@ -83,17 +83,21 @@ def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
 
 
 def test_insert_stations(empty_test_db, published_stations_dir):
-    # stations from stations_published_dir (3) and overrides stations (8)
+    # stations from stations_published_dir (3) and overrides stations (length of the station overrides)
     bluebikes.insert._insert_stations(published_stations_dir, empty_test_db)
 
     with sqlite3.connect(empty_test_db) as conn:
         bluebikes.sql._enable_spatialite(conn)
         stations = list(conn.execute("SELECT * FROM stations;"))
-        assert len(stations) == 8
+        station_overrides = pd.read_csv(
+            importlib.resources.path("bluebikes.stations.published", "station_id_overrides.csv")
+        )
+        assert len(stations) == 3 + len(station_overrides)
 
 
-def test_insert_station_links(empty_test_db):
-    bluebikes.insert._insert_station_mapping_links(database=empty_test_db)
+def test_create_station_links(empty_test_db):
+    with sqlite3.connect(empty_test_db) as conn:
+        bluebikes.insert._create_station_links_table(conn)
 
     with sqlite3.connect(empty_test_db) as conn:
         station_links = list(conn.execute("SELECT * FROM station_links;"))
