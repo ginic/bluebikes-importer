@@ -27,20 +27,20 @@ AND s1.id <> s2.id --prevents comparing row with itself using the unique primary
 AND (
     --Prioritize matching current_bluebikes_stations.csv first
     (s1.src_file = 'current_bluebikes_stations.csv' AND s1.src_file <> s2.src_file)
-    --2nd priority is Hubway_Stations_AS_of_July_2017.csv
-    OR (s1.src_file = 'Hubway_Stations_AS_of_July_2017.csv'
-        AND s2.src_file IN ('Hubway_Stations_AS_of_July_2017.csv',
+    --2nd priority is Hubway_Stations_as_of_July_2017.csv
+    OR (s1.src_file = 'Hubway_Stations_as_of_July_2017.csv'
+        AND s2.src_file IN ('Hubway_Stations_as_of_July_2017.csv',
                             'Hubway_Stations_2011_2016.csv',
-                            'previous_Hubway_Stations_AS_of_July_2017.csv',
+                            'previous_Hubway_Stations_as_of_July_2017.csv',
                             'missing_stations.csv')
         )
-    -- 3rd priority is prev_Hubway_Stations_AS_of_July_2017.csv
-    OR (s1.src_file = 'previous_Hubway_Stations_AS_of_July_2017.csv'
-        AND s2.src_file IN ('previous_Hubway_Stations_AS_of_July_2017.csv',
+    -- 3rd priority is prev_Hubway_Stations_as_of_July_2017.csv
+    OR (s1.src_file = 'previous_Hubway_Stations_as_of_July_2017.csv'
+        AND s2.src_file IN ('previous_Hubway_Stations_as_of_July_2017.csv',
                             'Hubway_Stations_2011_2016.csv',
                             'missing_data.csv')
         )
-    -- LASt priority is missing_data.csv, which will never appear AS src_file1
+    -- Last priority is missing_data.csv, which will never appear as src_file1
     OR (s1.src_file = 'Hubway_Stations_2011_2016.csv' AND s2.src_file= 'missing_data.csv')
 )
 ORDER BY raw_id1, distance_meters;

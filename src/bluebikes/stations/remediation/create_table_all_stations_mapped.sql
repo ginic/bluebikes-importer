@@ -12,8 +12,9 @@ CREATE TABLE all_trips_stations (
     normalized_id TEXT,
     normalized_name TEXT,
     normalized_latitude FLOAT,
-    normalized_longitude FLOAT
-    distance_meters INTEGER,
+    normalized_longitude FLOAT,
+    normalized_src_file TEXT,
+    distance_meters FLOAT
 );
 
 SELECT
@@ -72,7 +73,10 @@ INSERT INTO all_trips_stations (
 	normalized_name,
 	normalized_latitude,
 	normalized_longitude,
-	normalized_geom_point)
+    normalized_src_file,
+	normalized_geom_point,
+    distance_meters
+)
 SELECT
 	r.station_id AS station_id,
 	r.station_name AS station_name,
@@ -85,7 +89,8 @@ SELECT
     stations.name AS normalized_name,
     stations.latitude AS normalized_latitude,
     stations.longitude AS normalized_longitude,
-    stations.geom_point AS normalized_geom_point
+    stations.src_file AS normalized_src_file,
+    stations.geom_point AS normalized_geom_point,
     Distance(r.geom_estimated, stations.geom_point) as distance_meters
 FROM remapped_stations r
 LEFT JOIN stations ON r.normalized_id = stations.raw_id;
