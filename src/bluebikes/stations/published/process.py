@@ -16,6 +16,19 @@ STATIONS_PREV_HUBWAY_JULY_2017_CSV = "previous_Hubway_Stations_as_of_July_2017.c
 # Files we need to maintain in the repo
 STATION_LINKS_MAPPING = "station_mapping.csv"
 
+# Order of columns matters for inserts to DB
+NORMED_COL_ORDER = [
+    "Station ID",
+    "Name",
+    "Latitude",
+    "Longitude",
+    "Municipality",
+    "Public",
+    "# of Docks",
+    "File",
+]
+
+
 # Define the schema and names of the files to process
 STATION_FILES = {
     STATIONS_CURRENT_CSV: {
@@ -161,6 +174,8 @@ def process_to_dataframe(
             df["Public"] = params["default_public"]
 
         df["File"] = file_name
+        df = df[NORMED_COL_ORDER]
+
         dataframes.append(df)
 
     # Concatenate all dataframes

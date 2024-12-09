@@ -100,5 +100,6 @@ def test_create_station_links(empty_test_db):
         bluebikes.insert._create_station_links_table(conn)
 
     with sqlite3.connect(empty_test_db) as conn:
+        expected_links = pd.read_csv(importlib.resources.path("bluebikes.stations.published", "station_mapping.csv"))
         station_links = list(conn.execute("SELECT * FROM station_links;"))
-        assert len(station_links) == 20
+        assert len(station_links) == len(expected_links)

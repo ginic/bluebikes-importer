@@ -205,7 +205,7 @@ INSERT INTO stations (
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ST_Transform(ST_PointFromText(?, 4326), 3857));
 """
 
-station_mapping_drop = """SELECT DropTable(NULL, 'station_links', True);"""
+station_mapping_drop = """DROP TABLE IF EXISTS station_links;"""
 
 station_mapping_create = """
 CREATE TABLE station_links (
