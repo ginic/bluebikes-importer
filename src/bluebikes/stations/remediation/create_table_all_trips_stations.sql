@@ -94,3 +94,10 @@ SELECT
     Distance(r.geom_estimated, stations.geom_point) as distance_meters
 FROM remapped_stations r
 LEFT JOIN stations ON r.normalized_id = stations.raw_id;
+
+CREATE VIEW normalized_stations AS
+SELECT DISTINCT
+    normalized_id AS id,
+    normalized_name AS station_name
+FROM all_trips_stations
+WHERE normalized_id IS NOT NULL;

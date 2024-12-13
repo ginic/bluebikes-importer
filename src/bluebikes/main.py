@@ -87,7 +87,9 @@ def main(
         bbinsert._insert_stations(data_dir)
 
         print("==== Inserting bluebikes trips with %s workers ====" % worker_count)
-        distribution = bbinsert.evenly_distribute_csv_files_for_insert_by_total_size(worker_count, data_dir)
+        distribution = bbinsert.evenly_distribute_csv_files_for_insert_by_total_size(
+            worker_count, data_dir
+        )
         process_map(
             bbinsert.insert_trips_from_list_of_csvs,
             distribution.items(),
@@ -108,14 +110,16 @@ def main(
                 db,
                 importlib.resources.path(
                     "bluebikes.stations.remediation",
-                    "create_table_all_stations_mapped.sql",
+                    "create_table_all_trips_stations.sql",
                 ),
             )
             db.commit()
 
             # Create an view for inspecting stations that appear in trips data, but not
             # station CSV files
-            print("==== Creating views of stations with duplicate or missing metadata ====")
+            print(
+                "==== Creating views of stations with duplicate or missing metadata ===="
+            )
             for view_creation in [
                 "create_view_missing_stations.sql",
                 "create_view_nearby_duplicate_stations.sql",
@@ -123,7 +127,9 @@ def main(
             ]:
                 bbsql.execute_sql_script(
                     db,
-                    importlib.resources.path("bluebikes.stations.remediation", view_creation),
+                    importlib.resources.path(
+                        "bluebikes.stations.remediation", view_creation
+                    ),
                 )
                 db.commit()
 
@@ -131,7 +137,9 @@ def main(
             print("==== Creating table with normalized Bluebikes trips ====")
             bbsql.execute_sql_script(
                 db,
-                importlib.resources.path("bluebikes", "create_table_normalized_bluebikes.sql"),
+                importlib.resources.path(
+                    "bluebikes", "create_table_normalized_bluebikes.sql"
+                ),
             )
             db.commit()
 
