@@ -27,6 +27,7 @@ CREATE TABLE bluebikes (
     postal_code TEXT
 );
 """
+
 # Create columns for storing start and end points as geographic points
 # in https://epsg.io/3857 with distances in meters
 bluebikes_enable_spatialite = """
@@ -160,35 +161,9 @@ INSERT INTO filedb.bluebikes SELECT
 FROM bluebikes;
 """
 
-stations_table_drop = "SELECT DropTable(NULL, 'stations', True);"
-
-stations_create = """
-CREATE TABLE stations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    raw_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    latitude REAL,
-    longitude REAL,
-    municipality TEXT,
-    public BOOLEAN,
-    number_of_docks INTEGER,
-    src_file TEXT NOT NULL,
-    UNIQUE(raw_id, src_file),
-    UNIQUE(raw_id, name)
-);
-"""
-
-stations_enable_spatialite = """
-SELECT
-    AddGeometryColumn('stations', 'geom_point', 3857, 'POINT', 'XY');
-"""
-
-stations_add_spatial_index = """
-SELECT CreateSpatialIndex('stations', 'geom_point');
-"""
-
 # Insert stations, making sure to transform from map projection
 # 4326 (degree distance) to 3857 (meter distance)
+# Corresponding table defined in create_table_stations_spatial.sql
 stations_insert = """
 INSERT INTO stations (
     raw_id,

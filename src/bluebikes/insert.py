@@ -1,5 +1,6 @@
 import csv
 import glob
+import importlib.resources
 import os
 import re
 import sqlite3
@@ -48,7 +49,9 @@ def evenly_distribute_csv_files_for_insert_by_total_size(num_workers, data_dir):
     files.sort(key=lambda x: x[1], reverse=True)
 
     # initialize distribution dictionary
-    distribution = {i: [] for i in range(num_workers)}  # Each worker has an empty list of files
+    distribution = {
+        i: [] for i in range(num_workers)
+    }  # Each worker has an empty list of files
     workers = [{"id": i, "total_size": 0} for i in range(num_workers)]
 
     # distribute files uniformly across workers
@@ -110,7 +113,9 @@ def _insert_station_mapping_links(connection, station_links_csv=None):
 
     links_df = bbstations.get_station_links_dataframe(station_links_csv)
     # Insert explicit mappings
-    connection.executemany(bluebikes.sql.station_mapping_insert, links_df.values.tolist())
+    connection.executemany(
+        bluebikes.sql.station_mapping_insert, links_df.values.tolist()
+    )
 
 
 def _insert_trips_from_single_csv(file, cursor):
@@ -133,7 +138,9 @@ def _insert_trips_from_single_csv(file, cursor):
 
             # newer records drop duration
             if 202304 <= month_year:
-                date_fmt = DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
+                date_fmt = (
+                    DATE_FORMAT_WITH_MS if (202406 <= month_year) else DATE_FORMAT
+                )
                 end_date = datetime.strptime(row[3], date_fmt)
                 start_date = datetime.strptime(row[2], date_fmt)
                 time_delta = end_date - start_date
@@ -167,7 +174,9 @@ def _bulk_insert_trips_by_schema(data_to_insert, month_year, cursor):
 
 
 def _initialize_in_memory_database(worker_number):
-    memory_conn = sqlite3.connect(":memory:", timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None)
+    memory_conn = sqlite3.connect(
+        ":memory:", timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None
+    )
     _configure_sqlite_pragma(memory_conn, "memory")
     bluebikes.sql._initialize_spatialite(memory_conn)
     # Don't enable spatial lite on the in memory DBs,
@@ -199,7 +208,9 @@ def _dump_memory_db_trips_to_file(memory_conn, database=DATABASE):
     """
     Insert data from the in-memory table to the file-based table
     """
-    file_conn = sqlite3.connect(database, timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None)
+    file_conn = sqlite3.connect(
+        database, timeout=DATABASE_LOCK_TIMEOUT, isolation_level=None
+    )
     _configure_sqlite_pragma(file_conn)
     memory_conn.execute('ATTACH DATABASE "%s" AS filedb' % database)
     memory_conn.execute(bluebikes.sql.bluebikes_insert_add_points)
@@ -259,13 +270,11 @@ def _create_stations_table(connection):
     Create the 'stations' table, overwriting any existing table with the same name.
     The SpatiaLite extension should already be enabled in the connection.
     """
-    _create_table(
+    bluebikes.sql.execute_sql_script(
         connection,
-        bluebikes.sql.stations_table_drop,
-        bluebikes.sql.stations_create,
-        bluebikes.sql.stations_enable_spatialite,
-        bluebikes.sql.stations_add_spatial_index,
+        importlib.resources.path("bluebikes", "create_table_stations_spatial.sql"),
     )
+    connection.commit()
 
 
 def _create_station_links_table(connection):
