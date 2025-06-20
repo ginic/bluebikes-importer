@@ -146,7 +146,7 @@ We maintain two files to help resolve the problems with station ids described ab
 This file maps stations from older files to their correct station ids in more recent station files. It is used to create a view
 that joins the stations from the original Bluebikes trips data ("raw" stations) to their "correct" stations.
 Note that for this join to work the pair `(correct_id, correct_name)` cannot be the same as `(raw_id, raw_name)`.
-At least one of the id or name has to be different.
+At least one of the id or name should be different.
 
 ```text
 correct_id,correct_name,correct_src_file,raw_id,raw_name,raw_src_file
@@ -154,12 +154,14 @@ A32013,Surface Rd at India St,current_bluebikes_stations.csv,D32025,Milk St at I
 A32019,175 N Harvard St,current_bluebikes_stations.csv,A32007,Harvard Real Estate - North Harvard St at Western Ave,previous_Hubway_Stations_as_of_July_2017.csv
 A32051,Day Sq,current_bluebikes_stations.csv,A32027,Chelsea St at Saratoga St,Hubway_Stations_as_of_July_2017.csv
 B32020,Burlington Ave at Brookline Ave,current_bluebikes_stations.csv,B32009,Overland St at Brookline Ave,previous_Hubway_Stations_as_of_July_2017.csv
+OVERRIDE00001,Ferry St at Pleasantview Ave,station_id_overrides.csv,V32007,Ferry St at Pleasantview Ave,Hubway_Stations_as_of_July_2017.csv
 ```
 
 #### station_id_overrides.csv
-This file corrects instances when a station id was re-used for different stations by providing new unique ids for the older stations.
+This file corrects instances when a station id was re-used for different stations by providing new unique ids for the older stations,
+then adding an entry to station_mapping.csv.
 It can also be used to add metadata for stations that exist and appear in trip data, but were not listed in any of the CSV files from the s3 bucket.
-The file uses the same columns and format as `current_bluebikes_stations.csv` (without the 'Last Updated' header).
+The station_id_overrides.csv file uses the same columns and format as `current_bluebikes_stations.csv` (without the 'Last Updated' header).
 These stations are added to the database during station table creation time, with the published station CSV files from the s3 bucket.
 
 ```text
