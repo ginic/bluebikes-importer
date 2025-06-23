@@ -13,8 +13,12 @@ from tqdm.contrib.concurrent import process_map
 
 def main_cli():
     parser = argparse.ArgumentParser(
-        description="Download Blue Bikes data as CSV files, then load them into a SQLite Database called bluebike.sqlite"
+        description="Download Blue Bikes data as CSV files, then load them into a SQLite database."
     )
+    parser.add_argument(
+        "--database", default=bbinsert.DATABASE, help="Path to the SQLite database, defaults to bluebike.sqlite"
+    )
+
     parser.add_argument(
         "-d",
         "--data_dir",
@@ -87,9 +91,7 @@ def main(
         bbinsert._insert_stations(data_dir)
 
         print("==== Inserting bluebikes trips with %s workers ====" % worker_count)
-        distribution = bbinsert.evenly_distribute_csv_files_for_insert_by_total_size(
-            worker_count, data_dir
-        )
+        distribution = bbinsert.evenly_distribute_csv_files_for_insert_by_total_size(worker_count, data_dir)
         process_map(
             bbinsert.insert_trips_from_list_of_csvs,
             distribution.items(),
@@ -117,9 +119,7 @@ def main(
 
             # Create an view for inspecting stations that appear in trips data, but not
             # station CSV files
-            print(
-                "==== Creating views of stations with duplicate or missing metadata ===="
-            )
+            print("==== Creating views of stations with duplicate or missing metadata ====")
             for view_creation in [
                 "create_view_missing_stations.sql",
                 "create_view_nearby_duplicate_stations.sql",
@@ -127,9 +127,7 @@ def main(
             ]:
                 bbsql.execute_sql_script(
                     db,
-                    importlib.resources.path(
-                        "bluebikes.stations.remediation", view_creation
-                    ),
+                    importlib.resources.path("bluebikes.stations.remediation", view_creation),
                 )
                 db.commit()
 
@@ -137,9 +135,7 @@ def main(
             print("==== Creating table with normalized Bluebikes trips ====")
             bbsql.execute_sql_script(
                 db,
-                importlib.resources.path(
-                    "bluebikes", "create_table_normalized_bluebikes.sql"
-                ),
+                importlib.resources.path("bluebikes", "create_table_normalized_bluebikes.sql"),
             )
             db.commit()
 
