@@ -127,7 +127,8 @@ def fill_with_mode(series):
 
 def get_station_links_dataframe(link_csv_path=None):
     if link_csv_path is None:
-        link_csv_path = importlib.resources.path("bluebikes.stations.published", STATION_LINKS_MAPPING)
+        with importlib.resources.path("bluebikes.stations.published", STATION_LINKS_MAPPING) as default_station_links:
+            link_csv_path = default_station_links
     return pd.read_csv(link_csv_path, index_col=False)
 
 
@@ -144,7 +145,8 @@ def process_to_dataframe(
     station_csv_paths = []
 
     if is_include_station_overrides:
-        station_csv_paths.append(importlib.resources.path("bluebikes.stations.published", STATION_OVERRIDES_CSV))
+        with importlib.resources.path("bluebikes.stations.published", STATION_OVERRIDES_CSV) as station_overrides_path:
+            station_csv_paths.append(station_overrides_path)
 
     if station_file_directory is not None:
         for file in STATION_FILES.keys():
