@@ -54,6 +54,7 @@ def main_cli():
     )
     args = parser.parse_args()
     main(
+        args.database,
         args.data_dir,
         not args.no_cleanup,
         args.download_only,
@@ -64,6 +65,7 @@ def main_cli():
 
 
 def main(
+    database_path,
     data_dir,
     is_cleanup_downloads=True,
     download_only=False,
@@ -82,8 +84,8 @@ def main(
         print("Running in no insert mode. Skipping inserting records from files.")
     else:
         # If the database already exists, you won't need to reinitialize SpatiaLite tables
-        is_new_database = not os.path.exists(bbinsert.DATABASE)
-        with sqlite3.connect(bbinsert.DATABASE, isolation_level=None) as db:
+        is_new_database = not os.path.exists(database_path)
+        with sqlite3.connect(database_path, isolation_level=None) as db:
             print("==== Initializing SpatiaLite database ====")
             bbinsert._initialize_bluebikes_spatialite_database(db, is_new_database)
 
@@ -95,12 +97,12 @@ def main(
         process_map(
             bbinsert.insert_trips_from_list_of_csvs,
             distribution.items(),
-            [bbinsert.DATABASE] * len(distribution),
+            [database_path] * len(distribution),
             max_workers=worker_count,
         )
 
     if not download_only:
-        with sqlite3.connect(bbinsert.DATABASE) as db:
+        with sqlite3.connect(database_path) as db:
             bbsql._enable_spatialite(db)
 
             print("==== Inserting mapping for station normalization ====")
@@ -108,14 +110,12 @@ def main(
             db.commit()
 
             print("==== Creating view of fully normalized station mappings ====")
-            bbsql.execute_sql_script(
-                db,
-                importlib.resources.path(
-                    "bluebikes.stations.remediation",
-                    "create_table_all_trips_stations.sql",
-                ),
-            )
-            db.commit()
+            with importlib.resources.path(
+                "bluebikes.stations.remediation",
+                "create_table_all_trips_stations.sql",
+            ) as all_trips_script:
+                bbsql.execute_sql_script(db, all_trips_script)
+                db.commit()
 
             # Create an view for inspecting stations that appear in trips data, but not
             # station CSV files
@@ -125,19 +125,17 @@ def main(
                 "create_view_nearby_duplicate_stations.sql",
                 "create_view_distant_duplicate_stations.sql",
             ]:
-                bbsql.execute_sql_script(
-                    db,
-                    importlib.resources.path("bluebikes.stations.remediation", view_creation),
-                )
-                db.commit()
+                with importlib.resources.path("bluebikes.stations.remediation", view_creation) as view_script:
+                    bbsql.execute_sql_script(db, view_script)
+                    db.commit()
 
             # Create table of normalized bluebikes trips
             print("==== Creating table with normalized Bluebikes trips ====")
-            bbsql.execute_sql_script(
-                db,
-                importlib.resources.path("bluebikes", "create_table_normalized_bluebikes.sql"),
-            )
-            db.commit()
+            with importlib.resources.path(
+                "bluebikes", "create_table_normalized_bluebikes.sql"
+            ) as norm_bluebikes_script:
+                bbsql.execute_sql_script(db, norm_bluebikes_script)
+                db.commit()
 
     # clean up all downloaded data to reduce the size of the docker image
     if is_cleanup_downloads and not (postproc_only or download_only):
