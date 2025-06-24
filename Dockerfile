@@ -1,28 +1,26 @@
-# Use an official Python runtime as a parent image based on Alpine
-FROM python:3.9-alpine
-
-RUN apk add --no-cache sqlite
+# Datasette base already has Spatialite dependencies
+FROM datasetteproject/datasette:0.64.8 AS base
 
 WORKDIR /usr/app
-
 # Copy only the files for downloading and creating the database
-COPY pyproject.toml pyproject.toml
-COPY README.md README.md
-COPY /src ./src
+COPY pyproject.toml README.md /usr/app/
+COPY /src /usr/app/src
 
-RUN pip install .
+ENV BLUEBIKES_DB=/usr/app/bluebike.sqlite
 
-# Download the bluebike data from s3 this uses RUN which will include downloaded files in a docker layer
-RUN download_bluebikes --download_only
+# Install python dependencies
+RUN pip install --no-cache-dir .
 
-# Process the bluebike data from s3 and load it into SQL.
-RUN download_bluebikes --insert_only
-
-# Datasette will run on port 8001; expose this port
-EXPOSE 8001
-
-# Install the cluster map for GPS related visualizations
-RUN datasette install datasette-cluster-map
-
+# Build a SQLite database on the image that can be viewed on datasette
+FROM base AS bluebikes-importer-database
+# Install datasette dependencies for GPS related visualizations
+RUN datasette install datasette-cluster-map && \
+    # Download the bluebike data from s3 and insert into SQLite
+    download_bluebikes --database ${BLUEBIKES_DB}
 # Use Datasette to serve the database on container startup
-CMD ["datasette", "serve", "/usr/app/bluebike.sqlite", "--host", "0.0.0.0", "--port", "8001", "--setting", "sql_time_limit_ms", "60000"]
+CMD ["sh", "-c" "datasette", "serve", "${BLUEBIKES_DB}", "--host", "0.0.0.0", "--port", "8001", "--setting", "sql_time_limit_ms", "60000", "--load-extension=spatialite"]
+
+# Build the SQLite database dynamically when the image is run, so that you can
+# choose a local mount point for the database
+FROM base AS bluebikes-importer
+CMD ["sh", "-c", "download_bluebikes", "--database", "${BLUEBIKES_DB}"]

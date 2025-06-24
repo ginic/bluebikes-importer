@@ -1,0 +1,4 @@
+include src/bluebikes/*.sql
+include src/bluebikes/stations/published/*.csv
+include src/bluebikes/stations/published/*.sql
+include src/bluebikes/stations/remediation/*.sql

@@ -1,15 +1,15 @@
 -- these results represent stations with incorrect ids or names
-WITH all_stations AS (SELECT start_id           as station_id,
-                             start_station_name as station_name,
-                             start_lat          as lat,
-                             start_lng          as lng,
+WITH all_stations AS (SELECT start_id           AS station_id,
+                             start_station_name AS station_name,
+                             start_lat          AS lat,
+                             start_lng          AS lng,
                              rideable_type
                       FROM bluebikes
                       UNION
-                      SELECT end_id           as station_id,
-                             end_station_name as station_name,
-                             end_lat          as lat,
-                             end_lng          as lng,
+                      SELECT end_id           AS station_id,
+                             end_station_name AS station_name,
+                             end_lat          AS lat,
+                             end_lng          AS lng,
                              rideable_type
                       FROM bluebikes)
 SELECT station_id,

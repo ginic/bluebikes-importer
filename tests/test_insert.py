@@ -1,8 +1,10 @@
 import glob
+import importlib.resources
 import os
-
-import pytest
 import sqlite3
+
+import pandas as pd
+import pytest
 
 import bluebikes.insert
 import bluebikes.sql
@@ -12,10 +14,27 @@ import bluebikes.sql
 def empty_test_db(tmp_path):
     db_path = tmp_path / "test.db"
     with sqlite3.connect(db_path) as conn:
-        conn.execute(bluebikes.sql.table_create)
-    
+        bluebikes.insert._initialize_bluebikes_spatialite_database(conn)
+
     return db_path
-    
+
+
+def test_create_db(empty_test_db):
+    # Check both the database file and tables were created
+    assert empty_test_db.exists()
+    with sqlite3.connect(empty_test_db) as conn:
+        tables = list(
+            conn.execute(
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND "
+                "name='bluebikes' "
+                "OR name='stations' "
+                "ORDER BY name;"
+            )
+        )
+        assert tables[0] == ("bluebikes",)
+        assert tables[1] == ("stations",)
+
 
 def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
     distribution = bluebikes.insert.evenly_distribute_csv_files_for_insert_by_total_size(2, csv_dir)
@@ -26,8 +45,61 @@ def test_evenly_distribute_csv_files_for_insert_by_total_size(csv_dir):
 
 def test_insert_rows_from_list_of_csvs(empty_test_db, csv_dir):
     worker_assignments = (1, glob.glob(os.path.join(csv_dir, "*.csv")))
-    bluebikes.insert.insert_rows_from_list_of_csvs(worker_assignments, empty_test_db)
+    bluebikes.insert.insert_trips_from_list_of_csvs(worker_assignments, empty_test_db)
 
-    with sqlite3.connect(empty_test_db) as conn: 
+    with sqlite3.connect(empty_test_db) as conn:
+        bluebikes.sql._enable_spatialite(conn)
         result = list(conn.execute("SELECT COUNT(*) FROM bluebikes"))
-        assert result==[(2,)]
+        assert result == [(2,)]
+        # Query temporal and geometry points using snap to grid to fix precision
+        geoms = list(
+            conn.execute(
+                "SELECT "
+                "src_file, "
+                "tripduration, "
+                "started_at, "
+                "ended_at, "
+                "ST_AsText(ST_SnapToGrid(ST_Transform(start_point, 4326), 0.000001)), "
+                "ST_AsText(ST_SnapToGrid(ST_Transform(end_point, 4326), 0.000001)) "
+                "FROM bluebikes ORDER BY started_at"
+            )
+        )
+        assert geoms[0] == (
+            "201501_old_format_tripdata.csv",
+            542,
+            "2015-01-01 00:21:44",
+            "2015-01-01 00:30:47",
+            "POINT(-71.119084 42.387995)",
+            "POINT(-71.111075 42.373379)",
+        )
+        assert geoms[1] == (
+            "202404_new_format_tripdata.csv",
+            8207,
+            "2024-04-30 16:56:01",
+            "2024-04-30 19:12:48",
+            "POINT(-71.056438 42.406721)",
+            "POINT(-71.047314 42.403369)",
+        )
+
+
+def test_insert_stations(empty_test_db, published_stations_dir):
+    # stations from stations_published_dir (3) and overrides stations (length of the station overrides)
+    bluebikes.insert._insert_stations(published_stations_dir, empty_test_db)
+
+    with sqlite3.connect(empty_test_db) as conn:
+        bluebikes.sql._enable_spatialite(conn)
+        stations = list(conn.execute("SELECT * FROM stations;"))
+        station_overrides = pd.read_csv(
+            importlib.resources.path("bluebikes.stations.published", "station_id_overrides.csv")
+        )
+        assert len(stations) == 3 + len(station_overrides)
+
+
+def test_create_station_links(empty_test_db):
+    with sqlite3.connect(empty_test_db) as conn:
+        bluebikes.insert._create_station_links_table(conn)
+
+    with sqlite3.connect(empty_test_db) as conn:
+        expected_links = pd.read_csv(importlib.resources.path("bluebikes.stations.published", "station_mapping.csv"))
+        station_links = list(conn.execute("SELECT * FROM station_links;"))
+        assert len(station_links) == len(expected_links)
