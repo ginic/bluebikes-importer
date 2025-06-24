@@ -50,7 +50,7 @@ You will need to have a working docker setup on your machine
 - **Ubuntu Linux:** https://docs.docker.com/engine/install/ubuntu/
 
 ```commandline
-docker build -t bluebike-importer .
+docker build --target bluebikes-importer-database -t bluebikes-importer-database .
 docker run -p 8001:8001 bluebike-importer
 ```
 *Note: running the command above may take upwards of 1-5 minutes to fetch
